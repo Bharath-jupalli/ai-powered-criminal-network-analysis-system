@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # AI Criminal Investigation System — Enhanced Prototype
 
 A synthetic/demo investigator-assistance prototype for the hackathon.
@@ -36,3 +37,6 @@ Use `uvicorn main:app` rather than `--reload` if the virtual environment is insi
 Use only synthetic/demo case files for the hackathon. Historical matches and CCTV observations are analytical leads for investigator review; they do not establish identity, guilt, or criminal involvement.
 
 CCTV analysis requires `opencv-python-headless`. Large videos may take time to process because frame analysis is CPU-based.
+=======
+# ai-powered-criminal-network-analysis-system
+>>>>>>> 7baad692feb46ad92a2431d2c65f7ecf3d37a0c1
