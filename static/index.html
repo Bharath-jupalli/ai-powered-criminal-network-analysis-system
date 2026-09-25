@@ -1,0 +1,5749 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>AI Criminal Network Analysis</title>
+
+<script src="https://unpkg.com/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
+
+<style>
+
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #0b1020;
+    color: #e8edf7;
+    min-height: 100vh;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+.app {
+    display: flex;
+    min-height: 100vh;
+}
+
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+.sidebar {
+    width: 250px;
+    background: #10172a;
+    border-right: 1px solid #27324b;
+
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+
+    z-index: 20;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.logo {
+    padding: 24px 20px;
+    border-bottom: 1px solid #27324b;
+}
+
+.logo h1 {
+    font-size: 17px;
+    line-height: 1.4;
+}
+
+.logo span {
+    color: #62a8ff;
+}
+
+.logo small {
+    display: block;
+    margin-top: 7px;
+    color: #7f8ba3;
+    font-size: 11px;
+}
+
+.nav {
+    padding: 18px 12px;
+    overflow-y: auto;
+}
+
+.nav-section {
+    color: #65718a;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+
+    margin: 14px 10px 8px;
+}
+
+.nav-item {
+    width: 100%;
+
+    border: 0;
+    background: transparent;
+
+    color: #aeb8ca;
+
+    text-align: left;
+
+    padding: 11px 13px;
+
+    border-radius: 8px;
+
+    margin-bottom: 4px;
+
+    transition: .2s;
+}
+
+.nav-item:hover {
+    background: #19233a;
+    color: white;
+}
+
+.nav-item.active {
+    background: #1d3558;
+    color: #70b2ff;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+
+    padding: 15px;
+
+    border-top: 1px solid #27324b;
+
+    font-size: 11px;
+
+    color: #65718a;
+}
+
+
+/* =========================================================
+   MAIN
+========================================================= */
+
+.main {
+    margin-left: 250px;
+    width: calc(100% - 250px);
+}
+
+
+/* =========================================================
+   TOPBAR
+========================================================= */
+
+.topbar {
+    height: 70px;
+
+    background: #10172a;
+
+    border-bottom: 1px solid #27324b;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding: 0 25px;
+
+    position: sticky;
+
+    top: 0;
+
+    z-index: 10;
+}
+
+.page-title {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.top-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.search {
+    background: #0b1020;
+
+    border: 1px solid #2b3854;
+
+    border-radius: 8px;
+
+    color: white;
+
+    padding: 10px 14px;
+
+    width: 260px;
+
+    outline: none;
+}
+
+.search:focus {
+    border-color: #4e9cff;
+}
+
+.status {
+    color: #65df9a;
+    font-size: 12px;
+}
+
+.status::before {
+    content: "";
+
+    display: inline-block;
+
+    width: 7px;
+    height: 7px;
+
+    background: #65df9a;
+
+    border-radius: 50%;
+
+    margin-right: 7px;
+}
+
+
+/* =========================================================
+   CONTENT
+========================================================= */
+
+.content {
+    padding: 25px;
+}
+
+.page {
+    display: none;
+}
+
+.page.active {
+    display: block;
+}
+
+.page-heading {
+    margin-bottom: 22px;
+}
+
+.page-heading h2 {
+    font-size: 25px;
+}
+
+.page-heading p {
+    color: #7f8ba3;
+    margin-top: 7px;
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   CARDS
+========================================================= */
+
+.cards {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 15px;
+
+    margin-bottom: 20px;
+}
+
+.card {
+    background: #111a2e;
+
+    border: 1px solid #27324b;
+
+    border-radius: 12px;
+
+    padding: 20px;
+}
+
+.card-label {
+    color: #7f8ba3;
+    font-size: 12px;
+}
+
+.card-value {
+    font-size: 28px;
+
+    margin-top: 10px;
+
+    font-weight: 600;
+}
+
+.card-sub {
+    color: #65df9a;
+
+    font-size: 11px;
+
+    margin-top: 8px;
+}
+
+
+/* =========================================================
+   GRID / PANELS
+========================================================= */
+
+.grid-2 {
+    display: grid;
+
+    grid-template-columns:
+        1.5fr 1fr;
+
+    gap: 18px;
+}
+
+.panel {
+    background: #111a2e;
+
+    border: 1px solid #27324b;
+
+    border-radius: 12px;
+
+    overflow: hidden;
+
+    margin-bottom: 18px;
+}
+
+.panel-header {
+    padding: 17px 20px;
+
+    border-bottom: 1px solid #27324b;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+}
+
+.panel-header h3 {
+    font-size: 14px;
+}
+
+.panel-body {
+    padding: 20px;
+}
+
+
+/* =========================================================
+   GRAPH
+========================================================= */
+
+#networkGraph {
+    height: 500px;
+    background: #0b1020;
+}
+
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.table-wrap {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    text-align: left;
+
+    color: #75829b;
+
+    font-size: 11px;
+
+    text-transform: uppercase;
+
+    padding: 13px 15px;
+
+    border-bottom: 1px solid #27324b;
+}
+
+td {
+    padding: 13px 15px;
+
+    border-bottom: 1px solid #202b42;
+
+    font-size: 13px;
+}
+
+tr:hover td {
+    background: #162039;
+}
+
+
+/* =========================================================
+   BADGES
+========================================================= */
+
+.badge {
+    display: inline-block;
+
+    padding: 4px 8px;
+
+    border-radius: 5px;
+
+    font-size: 10px;
+
+    font-weight: bold;
+}
+
+.badge-person {
+    background: #17385b;
+    color: #72b7ff;
+}
+
+.badge-vehicle {
+    background: #3b2f18;
+    color: #e9bd69;
+}
+
+.badge-location {
+    background: #193c32;
+    color: #70d6a6;
+}
+
+.badge-case {
+    background: #3a243b;
+    color: #dc86e6;
+}
+
+.badge-high {
+    background: #51252a;
+    color: #ff858d;
+}
+
+.badge-medium {
+    background: #493a20;
+    color: #f1c56a;
+}
+
+.badge-low {
+    background: #193c32;
+    color: #70d6a6;
+}
+
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.btn {
+    border: 0;
+
+    background: #2569b8;
+
+    color: white;
+
+    padding: 9px 13px;
+
+    border-radius: 7px;
+
+    transition: .2s;
+}
+
+.btn:hover {
+    background: #2e7bd2;
+}
+
+.btn-secondary {
+    background: #1a263e;
+
+    border: 1px solid #30405d;
+}
+
+.btn-secondary:hover {
+    background: #243351;
+}
+
+.btn-danger {
+    background: #602b31;
+}
+
+
+/* =========================================================
+   LIST
+========================================================= */
+
+.entity-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.entity-row {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    padding: 13px 0;
+
+    border-bottom: 1px solid #222e46;
+
+    cursor: pointer;
+}
+
+.entity-row:last-child {
+    border-bottom: 0;
+}
+
+.entity-row:hover {
+    color: #72b7ff;
+}
+
+.entity-name {
+    font-size: 13px;
+}
+
+.entity-id {
+    color: #69758c;
+
+    font-size: 11px;
+
+    margin-top: 4px;
+}
+
+
+/* =========================================================
+   ALERTS
+========================================================= */
+
+.alert {
+    padding: 14px;
+
+    border: 1px solid #303c56;
+
+    border-radius: 8px;
+
+    margin-bottom: 10px;
+
+    background: #141e33;
+}
+
+.alert-title {
+    display: flex;
+
+    justify-content: space-between;
+
+    margin-bottom: 7px;
+}
+
+.alert-message {
+    color: #8d99ae;
+
+    font-size: 12px;
+
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   DETAIL
+========================================================= */
+
+.detail-grid {
+    display: grid;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap: 12px;
+}
+
+.detail-item {
+    background: #0c1426;
+
+    border: 1px solid #26324b;
+
+    padding: 13px;
+
+    border-radius: 7px;
+}
+
+.detail-item label {
+    display: block;
+
+    color: #69758c;
+
+    font-size: 10px;
+
+    text-transform: uppercase;
+
+    margin-bottom: 6px;
+}
+
+.detail-item span {
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   FORM
+========================================================= */
+
+.form-input,
+.form-textarea,
+.form-select {
+    width: 100%;
+
+    background: #0b1020;
+
+    color: white;
+
+    border: 1px solid #2c3954;
+
+    padding: 10px;
+
+    border-radius: 7px;
+
+    outline: none;
+}
+
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+    border-color: #4e9cff;
+}
+
+.form-textarea {
+    min-height: 100px;
+
+    resize: vertical;
+}
+
+
+/* =========================================================
+   FILTERS
+========================================================= */
+
+.filters {
+    display: flex;
+
+    gap: 10px;
+
+    flex-wrap: wrap;
+
+    margin-bottom: 18px;
+}
+
+select {
+    background: #111a2e;
+
+    color: white;
+
+    border: 1px solid #2c3954;
+
+    padding: 9px 12px;
+
+    border-radius: 7px;
+}
+
+
+/* =========================================================
+   NOTICE
+========================================================= */
+
+.notice {
+    background: #151e31;
+
+    border: 1px solid #33405a;
+
+    border-radius: 8px;
+
+    padding: 12px 14px;
+
+    color: #8f9bb0;
+
+    font-size: 11px;
+
+    margin-bottom: 18px;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+.mobile-menu {
+    display: none;
+
+    background: transparent;
+
+    color: white;
+
+    border: 0;
+
+    font-size: 20px;
+
+    margin-right: 12px;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media(max-width:1000px) {
+
+    .cards {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+    .grid-2 {
+        grid-template-columns: 1fr;
+    }
+
+    .sidebar {
+        transform: translateX(-100%);
+
+        transition: .25s;
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    .main {
+        margin-left: 0;
+
+        width: 100%;
+    }
+
+    .mobile-menu {
+        display: block;
+    }
+
+    .topbar {
+        padding: 0 15px;
+    }
+
+    .search {
+        width: 180px;
+    }
+}
+
+
+@media(max-width:600px) {
+
+    .cards {
+        grid-template-columns: 1fr;
+    }
+
+    .content {
+        padding: 15px;
+    }
+
+    .search {
+        display: none;
+    }
+
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    #networkGraph {
+        height: 400px;
+    }
+
+}
+
+
+/* ==================== FIR INTELLIGENCE ==================== */
+.fir-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,1fr);gap:18px}
+.fir-textarea{min-height:360px;width:100%;background:#0b1020;color:#e8edf7;border:1px solid #2c3954;padding:14px;border-radius:8px;outline:none;resize:vertical;line-height:1.55;font-size:13px}
+.fir-textarea:focus{border-color:#4e9cff}
+.fir-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.fir-results{min-height:360px}
+.fir-result-header{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:15px}
+.fir-result-title{font-size:18px;font-weight:700}
+.fir-result-sub{font-size:11px;color:#7f8ba3;margin-top:4px}
+.fir-entity-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:15px}
+.fir-entity{padding:11px;border:1px solid #27324b;border-radius:8px;background:#0c1426}
+.fir-entity label{display:block;color:#69758c;font-size:10px;text-transform:uppercase;margin-bottom:5px}
+.fir-entity strong{font-size:13px;word-break:break-word}
+.fir-section-title{font-size:13px;font-weight:700;margin:16px 0 9px}
+.fir-chip-wrap{display:flex;gap:7px;flex-wrap:wrap}
+.fir-chip{padding:5px 8px;border-radius:6px;background:#17385b;color:#72b7ff;font-size:11px}
+.fir-relation{padding:9px 10px;border:1px solid #26324b;border-radius:7px;margin-bottom:7px;background:#0c1426;font-size:11px;line-height:1.5}
+.fir-status{font-size:12px;color:#7f8ba3;margin-left:auto}
+.fir-empty{display:flex;align-items:center;justify-content:center;min-height:320px;text-align:center;color:#7f8ba3;padding:25px;line-height:1.6}
+.fir-success{color:#65df9a}
+.fir-warning{color:#f1c56a}
+.fir-error{color:#ff858d}
+@media(max-width:900px){.fir-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.fir-entity-grid{grid-template-columns:1fr}.fir-textarea{min-height:300px}}
+
+
+/* ==================== INVESTIGATION WORKSPACE ==================== */
+.case-workspace-top{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:18px}.case-workspace-title{font-size:24px;font-weight:800;margin:0 0 7px}.case-workspace-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;color:#94a3b8;font-size:13px}.case-workspace-actions{display:flex;gap:8px;flex-wrap:wrap}.workspace-stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}.workspace-stat{padding:15px 16px;border:1px solid #27324b;border-radius:12px;background:#111a2e}.workspace-stat-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#7f8ba3;margin-bottom:6px}.workspace-stat-value{font-size:20px;font-weight:800}.workspace-main-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(300px,.85fr);gap:16px}.workspace-network-panel,.workspace-side{border:1px solid #27324b;border-radius:12px;background:#111a2e;overflow:hidden}.workspace-panel-head{padding:15px 16px;border-bottom:1px solid #27324b;display:flex;align-items:center;justify-content:space-between;gap:10px}.workspace-panel-head h3{margin:0;font-size:14px}.workspace-panel-sub{font-size:11px;color:#7f8ba3}.case-network{height:520px;width:100%;background:#0b1020}.workspace-side{display:flex;flex-direction:column}.workspace-section{padding:15px;border-bottom:1px solid #27324b}.workspace-section:last-child{border-bottom:0}.workspace-section h3{margin:0 0 10px;font-size:14px}.workspace-list{display:flex;flex-direction:column;gap:8px;max-height:245px;overflow:auto}.workspace-list-item{padding:10px 11px;border:1px solid #26324b;border-radius:8px;background:#0c1426}.workspace-list-main{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.workspace-list-name{font-weight:700;font-size:13px}.workspace-list-sub{margin-top:3px;font-size:11px;color:#7f8ba3;line-height:1.45}.workspace-lead{border-left:3px solid #f1c56a}.workspace-lead-title{font-weight:700;font-size:12px}.workspace-lead-detail{margin-top:4px;font-size:11px;line-height:1.45;color:#7f8ba3}.workspace-context-note{margin-top:12px;padding:10px 11px;border-radius:8px;background:#101f35;border:1px solid #263d5d;color:#9ec7ff;font-size:11px;line-height:1.5}.case-status-select{background:#111a2e;color:white;border:1px solid #2c3954;padding:9px 12px;border-radius:7px;min-width:145px}.workspace-loading{height:100%;min-height:220px;display:flex;align-items:center;justify-content:center;color:#7f8ba3;font-size:13px}@media(max-width:900px){.workspace-stat-grid{grid-template-columns:repeat(2,1fr)}.workspace-main-grid{grid-template-columns:1fr}.case-network{height:430px}}@media(max-width:600px){.case-workspace-top{flex-direction:column}.workspace-stat-grid{gap:8px}.case-network{height:360px}}
+
+
+/* ==================== FIR DASHBOARD + MAP UPGRADE ==================== */
+.fir-dashboard-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:18px}
+.panel-subtitle{font-size:12px;color:#7f8ba3;margin-top:4px}
+.drop-zone{border:1.5px dashed rgba(120,150,190,.45);border-radius:16px;padding:42px 20px;text-align:center;background:rgba(10,18,32,.35);cursor:pointer;transition:.2s}
+.drop-zone:hover,.drop-zone.dragging{border-color:#4f8cff;background:rgba(79,140,255,.08);transform:translateY(-1px)}
+.drop-icon{font-size:38px;margin-bottom:8px}.drop-title{font-size:18px;font-weight:700}.drop-subtitle{color:#9aa7bc;margin-top:6px}.drop-meta{font-size:11px;color:#65728a;margin-top:12px}
+.selected-file{margin-top:12px;padding:10px 12px;border-radius:10px;background:rgba(79,140,255,.1);border:1px solid rgba(79,140,255,.25);font-size:13px}.hidden{display:none!important}
+.dashboard-fir-toolbar{align-items:center;margin-top:14px}.dashboard-fir-textarea{min-height:105px;margin-top:14px}.fir-case-action{margin-top:18px;border:1px solid rgba(79,140,255,.28)}
+.case-create-inline{display:flex;align-items:center;gap:18px;flex-wrap:wrap}.case-create-inline label{display:block;font-size:11px;color:#8f9bb0;margin-bottom:5px;text-transform:uppercase}.case-create-copy{flex:1;min-width:220px;color:#aab4c5;font-size:13px}.fir-dashboard-stats{margin-top:18px}.dashboard-next-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}.flow-strip{display:flex;align-items:center;justify-content:space-between;gap:10px}.flow-strip>div:not(.flow-arrow){display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center;font-size:12px}.flow-strip b{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:rgba(79,140,255,.16);color:#8eb5ff}.flow-arrow{color:#59677d;font-size:22px}.map-canvas{height:600px;border-radius:0 0 14px 14px;overflow:hidden;background:#0b1220}.map-legend{margin-top:14px}.map-legend-body{display:flex;gap:22px;flex-wrap:wrap;font-size:12px;color:#9aa7bc}.leaflet-container{background:#101827}.map-popup-title{font-weight:700;font-size:14px;margin-bottom:5px}.map-popup-row{font-size:12px;margin:3px 0}.map-popup-note{font-size:10px;color:#65728a;margin-top:7px}
+@media(max-width:900px){.fir-dashboard-grid,.dashboard-next-grid{grid-template-columns:1fr}.map-canvas{height:480px}.flow-strip{flex-wrap:wrap;justify-content:center}}
+
+/* ===== DYNAMIC INTELLIGENCE UI UPGRADE ===== */
+:root{--glow-blue:#4e9cff;--glow-cyan:#42e8d4;--glow-purple:#9b7cff}
+body{background:radial-gradient(circle at 15% 10%,rgba(78,156,255,.10),transparent 28%),radial-gradient(circle at 85% 75%,rgba(155,124,255,.08),transparent 30%),#080d19}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.22;background-image:linear-gradient(rgba(100,150,220,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(100,150,220,.045) 1px,transparent 1px);background-size:36px 36px;mask-image:linear-gradient(to bottom,#000,transparent)}
+.sidebar,.topbar,.card,.panel,.workspace-stat,.workspace-network-panel,.workspace-side{background:linear-gradient(145deg,rgba(17,26,46,.88),rgba(10,16,30,.82));backdrop-filter:blur(14px)}
+.sidebar{box-shadow:8px 0 35px rgba(0,0,0,.20)}
+.nav-item{position:relative;overflow:hidden}.nav-item::after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(var(--glow-blue),var(--glow-cyan));transform:scaleY(0);transition:.25s}.nav-item:hover::after,.nav-item.active::after{transform:scaleY(1)}
+.card,.panel,.workspace-stat,.workspace-network-panel,.workspace-side{box-shadow:0 10px 35px rgba(0,0,0,.16);transition:transform .25s,box-shadow .25s,border-color .25s}
+.card:hover,.workspace-stat:hover{transform:translateY(-3px);border-color:rgba(78,156,255,.38);box-shadow:0 14px 42px rgba(31,100,190,.14)}
+.btn{position:relative;overflow:hidden}.btn::before{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 25%,rgba(255,255,255,.12),transparent 75%);transform:translateX(-120%);transition:.45s}.btn:hover::before{transform:translateX(120%)}
+.page.active{animation:pageIn .35s ease both}@keyframes pageIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.workspace-stat-value{animation:valuePulse 2.5s ease-in-out infinite}@keyframes valuePulse{0%,100%{text-shadow:0 0 0 transparent}50%{text-shadow:0 0 16px rgba(78,156,255,.28)}}
+.case-network{position:relative;background:radial-gradient(circle at 50% 45%,rgba(78,156,255,.08),transparent 30%),radial-gradient(circle at 20% 80%,rgba(66,232,212,.05),transparent 25%),#070c16}
+.case-network::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle,rgba(150,190,255,.15) 1px,transparent 1px);background-size:24px 24px;opacity:.18}
+.graph-live-badge{font-size:10px;color:#42e8d4;border:1px solid rgba(66,232,212,.28);padding:4px 8px;border-radius:20px;margin-left:8px;animation:statusBlink 2s infinite}@keyframes statusBlink{50%{box-shadow:0 0 14px rgba(66,232,212,.25)}}
+.entity-row,.workspace-list-item{transition:transform .2s,background .2s,border-color .2s}.entity-row:hover,.workspace-list-item:hover{transform:translateX(4px);border-color:rgba(78,156,255,.30)}
+
+
+/* ===== VIGIL-STYLE CASE GRAPH ===== */
+.case-network{
+  position:relative;
+  min-height:520px;
+  background:
+    radial-gradient(circle at 30% 20%,#0e1620 0%,#0b0f14 58%,#080c12 100%) !important;
+  border:1px solid #1f2b37 !important;
+  overflow:hidden;
+}
+.case-network::before{
+  content:"";
+  position:absolute;inset:0;pointer-events:none;opacity:.22;
+  background-image:
+    linear-gradient(rgba(100,140,170,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(100,140,170,.035) 1px,transparent 1px);
+  background-size:32px 32px;
+}
+.case-network::after{
+  content:"";
+  position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle at 50% 48%,rgba(79,163,160,.055),transparent 38%);
+}
+.graph-dynamic-controls{
+  position:absolute !important;
+  left:12px;right:12px;bottom:12px;
+  z-index:20 !important;
+  display:flex !important;align-items:center;gap:6px !important;
+  flex-wrap:wrap;
+  padding:6px !important;
+  border:1px solid #1f2b37 !important;
+  border-radius:7px;
+  background:rgba(18,24,33,.94) !important;
+  backdrop-filter:blur(8px);
+}
+.graph-dynamic-controls .btn{
+  background:#0f141b !important;
+  border:1px solid #1f2b37 !important;
+  color:#aab6c3 !important;
+  padding:6px 10px !important;
+  border-radius:5px !important;
+  font-size:11px !important;
+}
+.graph-dynamic-controls .btn:hover{
+  border-color:#4fa3a0 !important;
+  color:#d7dee5 !important;
+  background:rgba(79,163,160,.10) !important;
+}
+.graph-dynamic-controls span{
+  color:#566472 !important;
+  font-family:'IBM Plex Mono',monospace;
+  letter-spacing:.15px;
+}
+.graph-vigil-legend{
+  position:absolute;left:14px;top:14px;z-index:20;
+  display:flex;flex-wrap:wrap;gap:7px;
+  max-width:72%;
+  padding:7px 9px;
+  background:rgba(18,24,33,.91);
+  border:1px solid #1f2b37;border-radius:7px;
+  backdrop-filter:blur(7px);
+}
+.graph-vigil-legend .vrow{
+  display:flex;align-items:center;gap:5px;
+  color:#7c8b99;font-size:10px;
+}
+.graph-vigil-legend .dot{
+  width:7px;height:7px;border-radius:50%;
+  box-shadow:0 0 7px currentColor;
+}
+.graph-vigil-title{
+  position:absolute;right:14px;top:14px;z-index:20;
+  color:#566472;font:10px 'IBM Plex Mono',monospace;
+  letter-spacing:.7px;text-transform:uppercase;
+  padding:6px 8px;border:1px solid #1f2b37;border-radius:5px;
+  background:rgba(18,24,33,.84);
+}
+
+</style>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3E6lGk6u6x9Yx9G5kFh8f0Q5mYk1I=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<style id="future-neon-upgrade">
+:root{--fx-cyan:#39f5ff;--fx-violet:#9b6cff;--fx-pink:#ff4fd8;--fx-green:#48ff9b;--fx-blue:#5c8cff;--fx-amber:#ffc857;--fx-bg:#050812}
+body{background:radial-gradient(circle at 15% 10%,rgba(57,245,255,.08),transparent 28%),radial-gradient(circle at 85% 20%,rgba(155,108,255,.09),transparent 30%),#050812!important;overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:9990;background:linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.012) 1px,transparent 1px);background-size:42px 42px;mask-image:linear-gradient(to bottom,black,transparent 85%);}
+.sidebar,.topbar,.panel,.card,.metric-card,.modal-content{border-color:rgba(57,245,255,.14)!important;box-shadow:0 0 0 1px rgba(255,255,255,.015),0 18px 60px rgba(0,0,0,.28),0 0 35px rgba(57,245,255,.025);transition:border-color .3s,box-shadow .3s,transform .3s}
+.sidebar{background:linear-gradient(180deg,rgba(7,12,24,.96),rgba(4,7,15,.98))!important}
+.sidebar .nav-item{transition:transform .22s,background .22s,color .22s,box-shadow .22s;position:relative;overflow:hidden}
+.sidebar .nav-item:hover{transform:translateX(4px);background:linear-gradient(90deg,rgba(57,245,255,.09),rgba(155,108,255,.05));box-shadow:inset 2px 0 var(--fx-cyan),0 0 18px rgba(57,245,255,.08)}
+.btn{transition:transform .18s,box-shadow .18s,border-color .18s,background .18s!important}
+.btn:hover{transform:translateY(-2px);box-shadow:0 0 20px rgba(57,245,255,.14)!important;border-color:rgba(57,245,255,.42)!important}
+.btn:active{transform:translateY(0) scale(.97)}
+.metric-card:hover,.card:hover,.panel:hover{border-color:rgba(57,245,255,.27)!important;box-shadow:0 0 30px rgba(57,245,255,.07),0 18px 60px rgba(0,0,0,.28)}
+.badge{box-shadow:0 0 12px rgba(57,245,255,.08)}
+#caseWorkspaceNetwork{position:relative!important;overflow:hidden!important;background:radial-gradient(circle at 50% 50%,rgba(57,245,255,.055),transparent 34%),radial-gradient(circle at 75% 30%,rgba(155,108,255,.055),transparent 28%),linear-gradient(180deg,#050812,#070b16)!important;border:1px solid rgba(57,245,255,.16)!important;box-shadow:inset 0 0 70px rgba(57,245,255,.035),0 0 40px rgba(57,245,255,.035)!important}
+#caseWorkspaceNetwork:after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 50%,transparent 0,transparent 42%,rgba(0,0,0,.32) 100%);z-index:2}
+.graph-vigil-title{color:#e9fbff!important;text-shadow:0 0 12px rgba(57,245,255,.45)!important;letter-spacing:.14em!important;text-transform:uppercase!important;font-weight:700!important}
+.graph-vigil-legend{background:rgba(3,8,17,.72)!important;border:1px solid rgba(57,245,255,.18)!important;backdrop-filter:blur(12px);box-shadow:0 0 22px rgba(57,245,255,.08)}
+.graph-dynamic-controls{background:rgba(3,8,17,.78)!important;border:1px solid rgba(57,245,255,.16)!important;backdrop-filter:blur(12px);box-shadow:0 0 24px rgba(0,0,0,.4)}
+.graph-dynamic-controls span{color:#7fa4b0!important}
+.fx-pulse{animation:fxPulse 2.2s ease-in-out infinite}
+@keyframes fxPulse{0%,100%{box-shadow:0 0 0 0 rgba(57,245,255,0)}50%{box-shadow:0 0 28px rgba(57,245,255,.18)}}
+.fx-toast{position:fixed;right:24px;bottom:24px;z-index:10000;background:rgba(4,9,18,.9);border:1px solid rgba(57,245,255,.3);color:#dffcff;padding:12px 16px;border-radius:12px;box-shadow:0 0 28px rgba(57,245,255,.12);font:600 12px 'IBM Plex Mono',monospace;letter-spacing:.04em;transform:translateY(18px);opacity:0;transition:.25s;pointer-events:none}.fx-toast.show{transform:none;opacity:1}
+.fx-ripple{position:absolute;border-radius:50%;transform:scale(0);animation:fxRipple .6s linear;background:rgba(57,245,255,.22);pointer-events:none}@keyframes fxRipple{to{transform:scale(5);opacity:0}}
+</style>
+
+
+<style id="premium-attractive-upgrade">
+:root{
+  --fx-cyan:#31e7ff;--fx-blue:#5b7cff;--fx-violet:#a86bff;--fx-pink:#ff4fd8;--fx-green:#38e6a4;--fx-amber:#ffc857;
+  --fx-bg:#050711;--fx-panel:rgba(13,17,32,.72);--fx-border:rgba(133,151,255,.18);
+}
+html,body{background:var(--fx-bg)!important}
+body{overflow-x:hidden;background:
+ radial-gradient(circle at 10% 10%,rgba(49,231,255,.09),transparent 28%),
+ radial-gradient(circle at 88% 14%,rgba(168,107,255,.10),transparent 30%),
+ radial-gradient(circle at 70% 90%,rgba(255,79,216,.07),transparent 28%),#050711!important}
+body:before,body:after{content:"";position:fixed;z-index:-1;border-radius:50%;pointer-events:none;filter:blur(8px);opacity:.55}
+body:before{width:280px;height:280px;left:14%;top:24%;background:radial-gradient(circle,rgba(49,231,255,.12),transparent 68%);animation:orbFloat 11s ease-in-out infinite}
+body:after{width:340px;height:340px;right:4%;bottom:6%;background:radial-gradient(circle,rgba(168,107,255,.12),transparent 68%);animation:orbFloat 14s ease-in-out infinite reverse}
+@keyframes orbFloat{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(20px,-24px,0) scale(1.08)}}
+.sidebar{background:linear-gradient(180deg,rgba(9,12,25,.96),rgba(6,8,17,.94))!important;border-right:1px solid rgba(103,126,255,.20)!important;box-shadow:12px 0 45px rgba(0,0,0,.24)}
+.logo{position:relative}
+.logo:after{content:"";position:absolute;left:0;bottom:-14px;width:72px;height:3px;border-radius:5px;background:linear-gradient(90deg,var(--fx-cyan),var(--fx-violet),transparent);box-shadow:0 0 16px rgba(49,231,255,.55)}
+.logo h1{letter-spacing:.04em;text-shadow:0 0 24px rgba(49,231,255,.10)}
+.nav-section{color:#6e7da0!important;letter-spacing:.16em!important;font-size:9px!important}
+.nav-item{border:1px solid transparent!important;transition:transform .22s ease,background .22s ease,border-color .22s ease,box-shadow .22s ease,color .22s ease!important}
+.nav-item:hover{transform:translateX(5px);background:linear-gradient(90deg,rgba(49,231,255,.10),rgba(168,107,255,.08))!important;border-color:rgba(49,231,255,.18)!important;box-shadow:0 7px 24px rgba(49,231,255,.07)}
+.nav-item.active{background:linear-gradient(90deg,rgba(49,231,255,.16),rgba(168,107,255,.13))!important;border-color:rgba(49,231,255,.28)!important;box-shadow:inset 3px 0 0 var(--fx-cyan),0 8px 28px rgba(49,231,255,.08);color:#eaffff!important}
+.main{position:relative}
+.topbar{background:rgba(5,7,17,.72)!important;backdrop-filter:blur(18px);border-bottom:1px solid rgba(111,132,255,.14)!important}
+.page-title{font-weight:800!important;letter-spacing:.03em;text-shadow:0 0 22px rgba(91,124,255,.16)}
+.search{background:rgba(12,16,30,.78)!important;border:1px solid rgba(107,128,255,.22)!important;transition:.25s ease!important}
+.search:focus{border-color:rgba(49,231,255,.58)!important;box-shadow:0 0 0 3px rgba(49,231,255,.08),0 0 28px rgba(49,231,255,.10)!important;transform:translateY(-1px)}
+.status{border-color:rgba(56,230,164,.28)!important;background:rgba(56,230,164,.07)!important;box-shadow:0 0 18px rgba(56,230,164,.07)}
+.card,.panel,.metric-card{background:linear-gradient(145deg,rgba(15,20,38,.80),rgba(8,11,23,.72))!important;border:1px solid var(--fx-border)!important;box-shadow:0 16px 45px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.025)!important;backdrop-filter:blur(14px);transition:transform .28s cubic-bezier(.2,.8,.2,1),border-color .28s ease,box-shadow .28s ease!important;position:relative;overflow:hidden}
+.card:before,.panel:before,.metric-card:before{content:"";position:absolute;inset:0;background:linear-gradient(120deg,transparent 0%,rgba(49,231,255,.045) 45%,transparent 65%);transform:translateX(-120%);transition:transform .7s ease;pointer-events:none}
+.card:hover,.panel:hover,.metric-card:hover{transform:translateY(-4px);border-color:rgba(91,124,255,.30)!important;box-shadow:0 22px 55px rgba(0,0,0,.27),0 0 30px rgba(91,124,255,.06)!important}
+.card:hover:before,.panel:hover:before,.metric-card:hover:before{transform:translateX(120%)}
+.metric-card:nth-child(1){box-shadow:inset 0 2px 0 rgba(49,231,255,.65),0 16px 45px rgba(0,0,0,.18)!important}
+.metric-card:nth-child(2){box-shadow:inset 0 2px 0 rgba(168,107,255,.65),0 16px 45px rgba(0,0,0,.18)!important}
+.metric-card:nth-child(3){box-shadow:inset 0 2px 0 rgba(255,79,216,.65),0 16px 45px rgba(0,0,0,.18)!important}
+.metric-card:nth-child(4){box-shadow:inset 0 2px 0 rgba(56,230,164,.65),0 16px 45px rgba(0,0,0,.18)!important}
+.btn{border:1px solid rgba(103,126,255,.24)!important;background:linear-gradient(135deg,rgba(25,32,60,.88),rgba(12,16,32,.88))!important;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease,filter .2s ease!important;box-shadow:0 7px 20px rgba(0,0,0,.15)}
+.btn:hover{transform:translateY(-2px);border-color:rgba(49,231,255,.42)!important;box-shadow:0 10px 30px rgba(49,231,255,.10),0 5px 18px rgba(0,0,0,.22);filter:brightness(1.08)}
+.btn:active{transform:translateY(0) scale(.98)}
+button{cursor:pointer}
+.badge,.tag,.chip{box-shadow:0 0 16px rgba(91,124,255,.06)}
+.page,.view,.content-section{animation:pageEnter .42s ease both}
+@keyframes pageEnter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.fx-pulse{animation:cardBreath .38s ease}
+@keyframes cardBreath{50%{box-shadow:0 0 34px rgba(49,231,255,.10)!important}}
+/* graph container */
+#caseWorkspaceNetwork{border:1px solid rgba(91,124,255,.22)!important;border-radius:18px!important;background:radial-gradient(circle at 50% 45%,rgba(91,124,255,.08),transparent 34%),#060914!important;box-shadow:inset 0 0 60px rgba(0,0,0,.35),0 20px 60px rgba(0,0,0,.22)!important}
+/* tasteful floating status dots */
+.fx-live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--fx-green);box-shadow:0 0 12px var(--fx-green);margin-right:7px;animation:liveDot 1.7s ease-in-out infinite}
+@keyframes liveDot{50%{transform:scale(1.45);opacity:.65}}
+@media(max-width:900px){.card,.panel,.metric-card{border-radius:14px!important}.nav-item:hover{transform:none}.topbar{backdrop-filter:blur(12px)}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+
+
+<style id="investigation-intelligence-upgrade">
+.intel-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
+.intel-drop{border:1px dashed rgba(49,231,255,.35);border-radius:16px;padding:28px;background:radial-gradient(circle at 50% 0,rgba(49,231,255,.08),transparent 55%),rgba(4,8,18,.58);text-align:center;transition:.25s}
+.intel-drop:hover,.intel-drop.drag{border-color:rgba(49,231,255,.8);box-shadow:0 0 35px rgba(49,231,255,.09);transform:translateY(-2px)}
+.intel-icon{font-size:32px;margin-bottom:10px;filter:drop-shadow(0 0 10px rgba(49,231,255,.35))}
+.intel-file{display:none}
+.intel-result{margin-top:16px}
+.intel-result-card{padding:16px;border:1px solid rgba(91,124,255,.2);border-radius:14px;background:rgba(7,11,23,.72);margin-bottom:10px}
+.intel-score{font-size:22px;font-weight:800;color:#31e7ff}
+.intel-reason{display:inline-flex;gap:6px;align-items:center;padding:6px 9px;margin:4px 4px 0 0;border-radius:999px;background:rgba(49,231,255,.07);border:1px solid rgba(49,231,255,.14);color:#cceff4;font-size:11px}
+.intel-muted{color:#7f8ba3;font-size:12px;line-height:1.6}
+.intel-table{width:100%;border-collapse:collapse}
+.intel-table th,.intel-table td{padding:10px;border-bottom:1px solid rgba(103,126,255,.12);text-align:left;font-size:12px}
+.intel-table th{color:#7f8ba3;text-transform:uppercase;letter-spacing:.08em;font-size:10px}
+.cctv-player{width:100%;max-height:430px;border-radius:14px;background:#02050a;border:1px solid rgba(49,231,255,.16)}
+.cctv-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+.cctv-stat{padding:14px;border:1px solid rgba(103,126,255,.14);border-radius:12px;background:rgba(7,11,23,.62)}
+.cctv-stat b{display:block;font-size:20px;margin-top:4px;color:#e9fbff}
+@media(max-width:900px){.intel-grid{grid-template-columns:1fr}.cctv-stat-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="app">
+
+
+<!-- =====================================================
+     SIDEBAR
+===================================================== -->
+
+<aside class="sidebar" id="sidebar">
+
+    <div class="logo">
+
+        <h1>
+            AI <span>CRIMINAL</span><br>
+            NETWORK ANALYSIS
+        </h1>
+
+        <small>
+            INVESTIGATOR ASSISTANCE PLATFORM
+        </small>
+
+    </div>
+
+
+    <nav class="nav">
+
+        <div class="nav-section">
+            Overview
+        </div>
+
+        <button
+            class="nav-item active"
+            data-page="dashboard">
+            FIR Dashboard
+        </button>
+
+        <button
+            class="nav-item"
+            data-page="network">
+            Network Analysis
+        </button>
+
+        <button
+            class="nav-item"
+            data-page="map">
+            Map Intelligence
+        </button>
+
+        <button
+            class="nav-item"
+            data-page="alerts">
+            Suspicious Patterns
+        </button>
+
+
+        <div class="nav-section">
+            Investigation
+        </div>
+
+        <button
+            class="nav-item"
+            data-page="cases">
+            Cases
+        </button>
+
+        <button
+            class="nav-item"
+            data-page="previous-cases">
+            Previous Case Intelligence
+        </button>
+
+        <button
+            class="nav-item"
+            data-page="cctv">
+            CCTV Intelligence
+        </button>
+
+        <button
+            class="nav-item"
+            data-page="entities">
+            Entities
+        </button>
+
+        <button
+            class="nav-item"
+            data-page="analytics">
+            Analytics
+        </button>
+
+
+        <div class="nav-section">
+            System
+        </div>
+
+        <button
+            class="nav-item"
+            data-page="import">
+            Data Import
+        </button>
+
+        <button
+            class="nav-item"
+            data-page="reports">
+            Reports
+        </button>
+
+        <button
+            class="nav-item"
+            data-page="settings">
+            Settings
+        </button>
+
+    </nav>
+
+
+    <div class="sidebar-footer">
+
+        Synthetic demonstration data<br>
+
+        v2.1 • AI Network Analysis
+
+    </div>
+
+</aside>
+
+
+
+<!-- =====================================================
+     MAIN
+===================================================== -->
+
+<main class="main">
+
+
+<header class="topbar">
+
+    <div style="
+        display:flex;
+        align-items:center;
+    ">
+
+        <button
+            class="mobile-menu"
+            onclick="toggleSidebar()">
+            ☰
+        </button>
+
+        <div
+            class="page-title"
+            id="pageTitle">
+            Dashboard
+        </div>
+
+    </div>
+
+
+    <div class="top-actions">
+
+        <input
+            class="search"
+            id="globalSearch"
+            placeholder="Search entities..."
+            oninput="globalSearch()"
+        >
+
+        <div class="status">
+            <span class="fx-live-dot"></span>SYSTEM ONLINE
+        </div>
+
+    </div>
+
+</header>
+
+
+
+<div class="content">
+
+
+<!-- =====================================================
+     DASHBOARD
+===================================================== -->
+
+<section class="page active" id="page-dashboard">
+
+    <div class="page-heading">
+        <h2>FIR Intelligence Dashboard</h2>
+        <p>Upload a synthetic FIR, extract structured facts, then create an investigation case.</p>
+    </div>
+
+    <div class="notice">
+        ⚠ Use synthetic/demo FIRs for this prototype. Extracted facts and analytical leads are for investigator assistance only; they do not establish criminal activity, guilt, or responsibility.
+    </div>
+
+    <div class="fir-dashboard-grid">
+        <div class="panel fir-upload-hero">
+            <div class="panel-header">
+                <div><h3>📄 Upload FIR</h3><div class="panel-subtitle">Start a new investigation from a document</div></div>
+                <span class="badge badge-case">PDF • DOCX • TXT</span>
+            </div>
+            <div class="panel-body">
+                <div class="drop-zone" id="firDropZone" onclick="document.getElementById('firFile').click()" ondragover="event.preventDefault();this.classList.add('dragging')" ondragleave="this.classList.remove('dragging')" ondrop="handleFIRDrop(event)">
+                    <div class="drop-icon">📄</div>
+                    <div class="drop-title">Drop a FIR document here</div>
+                    <div class="drop-subtitle">or click to choose a PDF, DOCX, or TXT file</div>
+                    <div class="drop-meta">Maximum file size: 10 MB</div>
+                    <input id="firFile" type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" style="display:none" onchange="readFIRFile(event)">
+                </div>
+                <div id="firSelectedFile" class="selected-file hidden"></div>
+                <div class="fir-toolbar dashboard-fir-toolbar">
+                    <button class="btn btn-secondary" onclick="loadSampleFIR()">Load Sample FIR</button>
+                    <button class="btn" onclick="analyzeFIR()">🔍 Analyze FIR</button>
+                    <span id="firStatus" class="fir-status">Ready</span>
+                </div>
+                <textarea id="firText" class="fir-textarea dashboard-fir-textarea" placeholder="Optional: paste a synthetic FIR here instead of uploading a file."></textarea>
+            </div>
+        </div>
+
+        <div class="panel fir-results-panel">
+            <div class="panel-header">
+                <div><h3>🔎 FIR Analysis</h3><div class="panel-subtitle">Structured facts extracted from the submitted document</div></div>
+                <span class="badge badge-person">EXTRACTION</span>
+            </div>
+            <div class="panel-body fir-results" id="firResults">
+                <div class="fir-empty">Upload or paste a synthetic FIR and click <strong>Analyze FIR</strong>.</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="firCaseAction" class="panel fir-case-action hidden">
+        <div class="panel-header"><div><h3>📁 Create Investigation Case</h3><div class="panel-subtitle">Create a case from the analyzed FIR when you are ready</div></div></div>
+        <div class="panel-body case-create-inline">
+            <div><label>Priority</label><select id="firCasePriority" class="case-status-select"><option>LOW</option><option selected>MEDIUM</option><option>HIGH</option><option>CRITICAL</option></select></div>
+            <div class="case-create-copy" id="firCaseCreateText">FIR analysis is ready. Creating a case will add it to Case Management.</div>
+            <button class="btn" onclick="createCaseFromFIR()">📁 Create Case from FIR</button>
+        </div>
+    </div>
+
+    <div class="cards fir-dashboard-stats">
+        <div class="card"><div class="card-label">NETWORK ENTITIES</div><div class="card-value" id="statEntities">--</div><div class="card-sub">Synthetic network</div></div>
+        <div class="card"><div class="card-label">RELATIONSHIPS</div><div class="card-value" id="statRelationships">--</div><div class="card-sub">Observed links</div></div>
+        <div class="card"><div class="card-label">COMMUNITIES</div><div class="card-value" id="statCommunities">--</div><div class="card-sub">Detected groups</div></div>
+        <div class="card"><div class="card-label">ANALYTICAL LEADS</div><div class="card-value" id="statAlerts">--</div><div class="card-sub">Patterns for review</div></div>
+    </div>
+
+    <div class="dashboard-next-grid">
+        <div class="panel">
+            <div class="panel-header"><h3>🧭 Investigation Flow</h3></div>
+            <div class="panel-body flow-strip">
+                <div><b>1</b><span>Upload FIR</span></div><div class="flow-arrow">→</div><div><b>2</b><span>Extract facts</span></div><div class="flow-arrow">→</div><div><b>3</b><span>Create case</span></div><div class="flow-arrow">→</div><div><b>4</b><span>Network + Map</span></div>
+            </div>
+        </div>
+        <div class="panel">
+            <div class="panel-header"><h3>⚠ Analytical Leads</h3><button class="btn btn-secondary" onclick="showPage('alerts')">View All</button></div>
+            <div class="panel-body"><div id="dashboardAlertsPreview" class="entity-list">Loading...</div></div>
+        </div>
+    </div>
+
+</section>
+
+<!-- =====================================================
+     NETWORK
+===================================================== -->
+
+<section
+    class="page"
+    id="page-network">
+
+    <div class="page-heading">
+
+        <h2>
+            Network Analysis
+        </h2>
+
+        <p>
+            Interactive relationship and community visualization.
+        </p>
+
+    </div>
+
+
+    <div class="filters">
+
+        <select
+            id="relationshipFilter"
+            onchange="filterGraph()">
+
+            <option value="ALL">
+                All relationships
+            </option>
+
+            <option value="CALL">
+                Calls
+            </option>
+
+            <option value="TRANSACTION">
+                Transactions
+            </option>
+
+            <option value="OWNS">
+                Ownership
+            </option>
+
+            <option value="LOCATION">
+                Locations
+            </option>
+
+            <option value="CASE_LINK">
+                Case links
+            </option>
+
+        </select>
+
+
+        <button
+            class="btn btn-secondary"
+            onclick="resetGraph()">
+
+            Reset View
+
+        </button>
+
+    </div>
+
+
+    <div class="panel">
+
+        <div
+            id="networkGraphFull"
+            style="height:650px;">
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     MAP INTELLIGENCE
+===================================================== -->
+<section class="page" id="page-map">
+    <div class="page-heading">
+        <h2>Map Intelligence</h2>
+        <p>Visualize case-specific locations on a real geographic map using public city-center coordinates. No Google billing or API key is required.</p>
+    </div>
+    <div class="notice">🗺️ Real geographic map for demonstration. Markers use public city-center coordinates; they do not represent precise incident addresses.</div>
+    <div class="panel">
+        <div class="panel-header"><div><h3>Location Relationship Map</h3><div class="panel-subtitle">Select a case to view only its location entities. Coordinates are public city-center points, not live person/device tracking.</div></div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><select id="mapCaseFilter" class="case-status-select" onchange="loadMapData()"><option value="">All map data</option></select><button class="btn btn-secondary" onclick="loadMapData()">Refresh Map</button></div></div>
+        <div id="mapCanvas" class="map-canvas"></div>
+    </div>
+    <div class="map-legend panel">
+      <div class="panel-body map-legend-body"><span>📍 Location</span><span>👤 Person</span><span>🚗 Vehicle</span><span>📞 Phone</span><span>💳 Account</span><span>Lines = case location links</span></div>
+    </div>
+</section>
+
+
+<!-- =====================================================
+     ALERTS
+===================================================== -->
+
+<section
+    class="page"
+    id="page-alerts">
+
+    <div class="page-heading">
+
+        <h2>
+            Suspicious Pattern Analysis
+        </h2>
+
+        <p>
+            Automatically detected unusual network structures.
+        </p>
+
+    </div>
+
+
+    <div class="notice">
+
+        These alerts identify unusual patterns in synthetic data
+        and should be manually reviewed before drawing conclusions.
+
+    </div>
+
+
+    <div class="panel">
+
+        <div class="panel-header">
+
+            <h3>
+                Detected Patterns
+            </h3>
+
+            <span id="alertCount">
+                0
+            </span>
+
+        </div>
+
+
+        <div
+            class="panel-body"
+            id="alertsList">
+
+            Loading...
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+
+<!-- =====================================================
+     FIR INTELLIGENCE
+===================================================== -->
+<section class="page" id="page-fir">
+    <div class="page-heading">
+        <h2>FIR Intelligence</h2>
+        <p>Extract structured facts from a synthetic FIR and connect them to the investigation graph.</p>
+    </div>
+
+    <div class="notice">
+        ⚠ Use synthetic/demo FIRs for this prototype. Document extraction creates analytical leads;
+        it does not determine guilt, verify allegations, or replace investigator judgment.
+    </div>
+
+    <div class="fir-grid">
+        <div class="panel">
+            <div class="panel-header">
+                <h3>FIR / Case Document</h3>
+                <span class="badge badge-case">PDF • DOCX • TXT</span>
+            </div>
+            <div class="panel-body">
+                <textarea id="firText" class="fir-textarea" placeholder="Paste a synthetic FIR here, or load the sample FIR.\n\nExample fields the parser understands:\nFIR No: FIR-2026-002\nCase ID: CASE-002\nDate: 2026-08-12\nPersons Mentioned: Person A, Person B\nLocation: Location X\nVehicle: V1\nPhone: 9000000001\nAccount: ACC-001"></textarea>
+                <div class="fir-toolbar">
+                    <button class="btn btn-secondary" onclick="loadSampleFIR()">Load Sample FIR</button>
+                    <label class="btn btn-secondary" style="display:inline-block;cursor:pointer">
+                        Upload FIR Document
+                        <input id="firFile" type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" style="display:none" onchange="readFIRFile(event)">
+                    </label>
+                    <button class="btn" onclick="analyzeFIR()">Analyze FIR</button>
+                    <span id="firStatus" class="fir-status">Ready</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <h3>Document Intelligence Results</h3>
+                <span class="badge badge-person">EXTRACTION</span>
+            </div>
+            <div class="panel-body fir-results" id="firResults">
+                <div class="fir-empty">
+                    Paste or load a synthetic FIR and click <strong style="margin:0 4px">Analyze FIR</strong>.<br>
+                    The system will extract entities, dates, case details and relationships for review.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel" style="margin-top:18px">
+        <div class="panel-header">
+            <h3>Investigation Flow</h3>
+        </div>
+        <div class="panel-body">
+            <div class="detail-grid">
+                <div class="detail-item"><label>1. Document</label><span>FIR text is submitted to the backend.</span></div>
+                <div class="detail-item"><label>2. Extraction</label><span>Structured entities, dates and identifiers are detected.</span></div>
+                <div class="detail-item"><label>3. Correlation</label><span>Extracted entities are compared with the synthetic network.</span></div>
+                <div class="detail-item"><label>4. Analysis</label><span>Relationships and existing analytical leads are surfaced.</span></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- =====================================================
+     ENTITIES
+===================================================== -->
+
+<section
+    class="page"
+    id="page-entities">
+
+    <div class="page-heading">
+
+        <h2>
+            Entity Intelligence
+        </h2>
+
+        <p>
+            Browse people, vehicles, locations and case entities.
+        </p>
+
+    </div>
+
+
+    <div class="filters">
+        <select id="entityCaseFilter" onchange="renderEntities()">
+            <option value="ALL">All network entities</option>
+        </select>
+
+        <select
+            id="entityFilter"
+            onchange="renderEntities()">
+
+            <option value="ALL">
+                All types
+            </option>
+
+            <option value="PERSON">
+                People
+            </option>
+
+            <option value="VEHICLE">
+                Vehicles
+            </option>
+
+            <option value="LOCATION">
+                Locations
+            </option>
+
+            <option value="CASE">
+                Cases
+            </option>
+
+        </select>
+
+    </div>
+
+
+    <div class="panel">
+
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>ID</th>
+
+                        <th>Name</th>
+
+                        <th>Type</th>
+
+                        <th>City</th>
+
+                        <th>Action</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody
+                    id="entitiesTable">
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     CASE MANAGEMENT
+===================================================== -->
+
+<section
+    class="page"
+    id="page-cases">
+
+
+    <div class="page-heading">
+
+        <h2>
+            Case Management
+        </h2>
+
+        <p>
+            Create, review and manage investigation cases.
+        </p>
+
+    </div>
+
+
+    <div class="notice">
+
+        ⚠ Cases in this prototype use synthetic demonstration
+        data. Case status and analytical findings require
+        human review.
+
+    </div>
+
+
+    <!-- CASE STATISTICS -->
+
+    <div class="cards">
+
+
+        <div class="card">
+
+            <div class="card-label">
+                TOTAL CASES
+            </div>
+
+            <div
+                class="card-value"
+                id="totalCases">
+                0
+            </div>
+
+            <div class="card-sub">
+                Registered cases
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-label">
+                OPEN
+            </div>
+
+            <div
+                class="card-value"
+                id="openCases">
+                0
+            </div>
+
+            <div class="card-sub">
+                Active cases
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-label">
+                UNDER REVIEW
+            </div>
+
+            <div
+                class="card-value"
+                id="reviewCases">
+                0
+            </div>
+
+            <div class="card-sub">
+                Being reviewed
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-label">
+                HIGH PRIORITY
+            </div>
+
+            <div
+                class="card-value"
+                id="highCases">
+                0
+            </div>
+
+            <div class="card-sub">
+                High / critical cases
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- CREATE CASE -->
+
+    <div class="panel">
+
+        <div class="panel-header">
+
+            <h3>
+                Create New Case
+            </h3>
+
+        </div>
+
+
+        <div class="panel-body">
+
+
+            <div class="detail-grid">
+
+
+                <div class="detail-item">
+
+                    <label>
+                        Case ID
+                    </label>
+
+                    <input
+                        class="form-input"
+                        id="newCaseId"
+                        placeholder="CASE-002"
+                    >
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <label>
+                        Title
+                    </label>
+
+                    <input
+                        class="form-input"
+                        id="newCaseTitle"
+                        placeholder="Investigation title"
+                    >
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <label>
+                        Priority
+                    </label>
+
+                    <select
+                        class="form-select"
+                        id="newCasePriority">
+
+                        <option value="LOW">
+                            LOW
+                        </option>
+
+                        <option
+                            value="MEDIUM"
+                            selected>
+                            MEDIUM
+                        </option>
+
+                        <option value="HIGH">
+                            HIGH
+                        </option>
+
+                        <option value="CRITICAL">
+                            CRITICAL
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <label>
+                        Description
+                    </label>
+
+                    <textarea
+                        class="form-textarea"
+                        id="newCaseDescription"
+                        placeholder="Brief case description">
+                    </textarea>
+
+                </div>
+
+            </div>
+
+
+            <br>
+
+
+            <button
+                class="btn"
+                onclick="createNewCase()">
+
+                + Create Case
+
+            </button>
+
+
+            <span
+                id="caseCreateMessage"
+                style="
+                margin-left:12px;
+                font-size:12px;
+                ">
+
+            </span>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- CASE LIST -->
+
+    <div class="panel">
+
+        <div class="panel-header">
+
+            <h3>
+                Registered Cases
+            </h3>
+
+
+            <button
+                class="btn btn-secondary"
+                onclick="renderCases()">
+
+                Refresh
+
+            </button>
+
+        </div>
+
+
+        <div class="panel-body">
+
+            <div id="casesList">
+
+                Loading...
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+
+<!-- =====================================================
+     INVESTIGATION WORKSPACE
+===================================================== -->
+<section class="page" id="page-case-workspace">
+    <div class="case-workspace-top">
+        <div>
+            <h2 class="case-workspace-title" id="workspaceCaseTitle">Investigation Workspace</h2>
+            <div class="case-workspace-meta">
+                <span id="workspaceCaseId">Case: —</span><span>•</span>
+                <span id="workspaceCaseCreated">Created: —</span><span>•</span>
+                <span id="workspaceCasePriority">Priority: —</span>
+            </div>
+        </div>
+        <div class="case-workspace-actions">
+            <select id="workspaceCaseStatus" class="case-status-select" onchange="changeWorkspaceStatus(this.value)">
+                <option value="OPEN">OPEN</option>
+                <option value="UNDER REVIEW">UNDER REVIEW</option>
+                <option value="ON HOLD">ON HOLD</option>
+                <option value="CLOSED">CLOSED</option>
+            </select>
+            <button class="btn btn-secondary" onclick="showPage('cases')">← Back to Cases</button>
+            <button class="btn btn-danger" onclick="deleteWorkspaceCase()">🗑 Delete Case</button>
+        </div>
+    </div>
+    <div class="workspace-stat-grid">
+        <div class="workspace-stat"><div class="workspace-stat-label">Case Priority</div><div class="workspace-stat-value" id="workspacePriorityStat">—</div></div>
+        <div class="workspace-stat"><div class="workspace-stat-label">Network Entities</div><div class="workspace-stat-value" id="workspaceEntityStat">0</div></div>
+        <div class="workspace-stat"><div class="workspace-stat-label">Network Links</div><div class="workspace-stat-value" id="workspaceLinkStat">0</div></div>
+        <div class="workspace-stat"><div class="workspace-stat-label">Analytical Leads</div><div class="workspace-stat-value" id="workspaceLeadStat">0</div></div>
+    </div>
+    <div class="workspace-main-grid">
+        <div class="workspace-network-panel">
+            <div class="workspace-panel-head"><div><h3>Case Network</h3><div class="workspace-panel-sub" id="workspaceNetworkSubtitle">Synthetic investigator-assistance network context</div></div><span class="badge">ANALYSIS</span></div>
+            <div id="caseWorkspaceNetwork" class="case-network"><div class="workspace-loading">Loading case network…</div></div>
+        </div>
+        <div class="workspace-side">
+            <div class="workspace-section"><h3>Case Information</h3><div class="workspace-list-item"><div class="workspace-list-name" id="workspaceInfoTitle">—</div><div class="workspace-list-sub" id="workspaceInfoDescription">No description available.</div></div><div class="workspace-context-note">This prototype assists investigators with analytical review. Network connections and alerts are leads for review, not proof of criminal activity or guilt.</div></div>
+            <div class="workspace-section"><h3>Network Entities</h3><div id="workspaceEntityList" class="workspace-list"><div class="workspace-list-sub">Loading entities…</div></div></div>
+            <div class="workspace-section"><h3>Analytical Leads</h3><div id="workspaceLeadList" class="workspace-list"><div class="workspace-list-sub">Loading analytical leads…</div></div></div>
+        </div>
+    </div>
+
+    <div class="panel case-analysis-panel">
+        <div class="panel-header">
+            <div><h3>📊 Case Analysis</h3><div class="panel-subtitle">Explainable metrics calculated from this case's attached synthetic entities and relationships</div></div>
+            <button class="btn btn-secondary" onclick="loadWorkspaceAnalysis()">↻ Refresh Analysis</button>
+        </div>
+        <div class="panel-body">
+            <div id="workspaceAnalysisContent"><div class="case-analysis-empty">Loading case analysis…</div></div>
+        </div>
+    </div>
+</section>
+
+
+<style>
+.case-analysis-panel{margin-top:16px}.case-analysis-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.case-analysis-card{border:1px solid #27324b;border-radius:12px;background:#0f172a;padding:14px}.case-analysis-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#7f8ba3;margin-bottom:6px}.case-analysis-value{font-size:22px;font-weight:800}.case-analysis-content{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:14px;margin-top:14px}.case-analysis-list{border:1px solid #27324b;border-radius:12px;background:#0f172a;padding:12px}.case-analysis-row{display:flex;justify-content:space-between;gap:12px;padding:9px 4px;border-bottom:1px solid #202a40}.case-analysis-row:last-child{border-bottom:0}.case-analysis-name{font-weight:700}.case-analysis-sub{font-size:12px;color:#94a3b8}.case-analysis-empty{padding:18px;border:1px dashed #334155;border-radius:10px;color:#94a3b8}.case-analysis-note{margin-top:12px;padding:11px 12px;border:1px solid #263c5d;border-radius:10px;color:#9db9df;background:#0d1b31;font-size:12px;line-height:1.5}@media(max-width:900px){.case-analysis-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.case-analysis-content{grid-template-columns:1fr}}@media(max-width:600px){.case-analysis-grid{grid-template-columns:1fr}}
+</style>
+
+
+<!-- =====================================================
+     PREVIOUS CASE INTELLIGENCE
+===================================================== -->
+<section class="page" id="page-previous-cases">
+    <div class="page-heading">
+        <h2>Previous Case Intelligence</h2>
+        <p>Upload historical synthetic case files and correlate them with the selected investigation.</p>
+    </div>
+
+    <div class="notice">⚠ Historical matches are analytical leads. A shared name, place, or pattern does not establish identity, guilt, or criminal involvement.</div>
+
+    <div class="intel-grid">
+        <div class="panel">
+            <div class="panel-header"><h3>Upload Previous Case File</h3><span class="badge">PDF • DOCX • TXT</span></div>
+            <div class="panel-body">
+                <label for="previousCaseFile" class="intel-drop" id="previousDrop">
+                    <div class="intel-icon">◈</div>
+                    <strong>Drop a previous case file here</strong>
+                    <div class="intel-muted" style="margin:8px 0 14px">or click to browse your computer</div>
+                    <span class="btn">Choose Case File</span>
+                    <input class="intel-file" id="previousCaseFile" type="file" accept=".pdf,.docx,.txt">
+                </label>
+                <div style="margin-top:14px">
+                    <label class="card-label">Compare against current case</label>
+                    <select id="previousCaseCurrent" class="search" style="width:100%;margin-top:7px"></select>
+                </div>
+                <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+                    <button class="btn" onclick="uploadPreviousCase()">Analyze & Store Previous Case</button>
+                    <button class="btn" onclick="matchPreviousCases()">Search All Historical Cases</button>
+                </div>
+                <div id="previousCaseStatus" class="intel-muted" style="margin-top:12px">Ready.</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header"><h3>Correlation Engine</h3><span class="status">ONLINE</span></div>
+            <div class="panel-body">
+                <div class="cctv-stat-grid" style="grid-template-columns:repeat(2,1fr)">
+                    <div class="cctv-stat"><span class="intel-muted">Person/entity</span><b id="previousPersonCount">—</b></div>
+                    <div class="cctv-stat"><span class="intel-muted">Location</span><b id="previousLocationCount">—</b></div>
+                    <div class="cctv-stat"><span class="intel-muted">Pattern</span><b id="previousPatternCount">—</b></div>
+                    <div class="cctv-stat"><span class="intel-muted">Historical files</span><b id="previousFileCount">0</b></div>
+                </div>
+                <div id="previousCurrentSummary" class="intel-result" class="intel-muted">Select a case to begin correlation.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel" style="margin-top:18px">
+        <div class="panel-header"><h3>Historical Case Matches</h3><span id="previousMatchCount" class="badge">0 matches</span></div>
+        <div class="panel-body">
+            <div id="previousMatches" class="intel-muted">No correlation results yet.</div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header"><h3>Uploaded Historical Repository</h3></div>
+        <div class="panel-body" id="previousRepository"><div class="intel-muted">Loading…</div></div>
+    </div>
+</section>
+
+<!-- =====================================================
+     CCTV INTELLIGENCE
+===================================================== -->
+<section class="page" id="page-cctv">
+    <div class="page-heading">
+        <h2>CCTV Intelligence</h2>
+        <p>Analyze MP4 footage for observable events and anonymous person detections.</p>
+    </div>
+
+    <div class="notice">⚠ The CCTV module performs frame-level observation only. It does not perform face identification and does not determine guilt or identity.</div>
+
+    <div class="intel-grid">
+        <div class="panel">
+            <div class="panel-header"><h3>Upload CCTV Footage</h3><span class="badge">MP4</span></div>
+            <div class="panel-body">
+                <label for="cctvFile" class="intel-drop" id="cctvDrop">
+                    <div class="intel-icon">◉</div>
+                    <strong>Select CCTV MP4 footage</strong>
+                    <div class="intel-muted" style="margin:8px 0 14px">Frame sampling + anonymous person detection</div>
+                    <span class="btn">Choose MP4</span>
+                    <input class="intel-file" id="cctvFile" type="file" accept=".mp4,video/mp4">
+                </label>
+                <div style="margin-top:14px">
+                    <label class="card-label">Attach to case</label>
+                    <select id="cctvCaseSelect" class="search" style="width:100%;margin-top:7px"></select>
+                </div>
+                <button class="btn" style="margin-top:14px" onclick="analyzeCCTV()">Analyze CCTV Video</button>
+                <div id="cctvStatus" class="intel-muted" style="margin-top:12px">Ready.</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header"><h3>Video Preview</h3><span id="cctvState" class="badge">WAITING</span></div>
+            <div class="panel-body">
+                <video id="cctvVideo" class="cctv-player" controls></video>
+                <div id="cctvStats" class="cctv-stat-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel" style="margin-top:18px">
+        <div class="panel-header"><h3>Observed Events</h3></div>
+        <div class="panel-body" id="cctvObservations"><div class="intel-muted">Analyze an MP4 to populate frame observations.</div></div>
+    </div>
+</section>
+
+<!-- =====================================================
+     ANALYTICS
+===================================================== -->
+
+<section
+    class="page"
+    id="page-analytics">
+
+    <div class="page-heading">
+
+        <h2>
+            Network Analytics
+        </h2>
+
+        <p>
+            Centrality and structural measurements.
+        </p>
+
+    </div>
+
+
+    <div class="panel">
+
+        <div class="panel-header">
+
+            <h3>
+                Entity Connectivity Ranking
+            </h3>
+
+        </div>
+
+
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>Rank</th>
+
+                        <th>Entity</th>
+
+                        <th>Type</th>
+
+                        <th>Connections</th>
+
+                        <th>Betweenness</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody
+                    id="analyticsTable">
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     IMPORT
+===================================================== -->
+
+<section
+    class="page"
+    id="page-import">
+
+    <div class="page-heading">
+
+        <h2>
+            Data Import
+        </h2>
+
+        <p>
+            Prepare structured datasets for analysis.
+        </p>
+
+    </div>
+
+
+    <div class="notice">
+
+        The current demonstration uses synthetic CSV datasets
+        stored by the backend. Real-world investigative data
+        should only be processed with appropriate authorization,
+        privacy safeguards, and institutional controls.
+
+    </div>
+
+
+    <div class="grid-2">
+
+
+        <div class="panel">
+
+            <div class="panel-header">
+
+                <h3>
+                    Supported Data Sources
+                </h3>
+
+            </div>
+
+
+            <div class="panel-body">
+
+                <div class="entity-list">
+
+
+                    <div class="entity-row">
+
+                        <span>
+                            People / Entity Records
+                        </span>
+
+                        <span class="badge badge-person">
+                            CSV
+                        </span>
+
+                    </div>
+
+
+                    <div class="entity-row">
+
+                        <span>
+                            Communication Records
+                        </span>
+
+                        <span class="badge badge-person">
+                            CSV
+                        </span>
+
+                    </div>
+
+
+                    <div class="entity-row">
+
+                        <span>
+                            Financial Transactions
+                        </span>
+
+                        <span class="badge badge-medium">
+                            CSV
+                        </span>
+
+                    </div>
+
+
+                    <div class="entity-row">
+
+                        <span>
+                            Vehicle Records
+                        </span>
+
+                        <span class="badge badge-vehicle">
+                            CSV
+                        </span>
+
+                    </div>
+
+
+                    <div class="entity-row">
+
+                        <span>
+                            Location Records
+                        </span>
+
+                        <span class="badge badge-location">
+                            CSV
+                        </span>
+
+                    </div>
+
+
+                    <div class="entity-row">
+
+                        <span>
+                            Case Records
+                        </span>
+
+                        <span class="badge badge-case">
+                            CSV
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="panel">
+
+            <div class="panel-header">
+
+                <h3>
+                    Dataset Status
+                </h3>
+
+            </div>
+
+
+            <div class="panel-body">
+
+                <p style="
+                    color:#7f8ba3;
+                    font-size:13px;
+                    line-height:1.7;
+                ">
+
+                    Current prototype datasets are automatically
+                    loaded from the application's data directory.
+
+                </p>
+
+
+                <br>
+
+
+                <button
+                    class="btn"
+                    onclick="location.reload()">
+
+                    Refresh Dataset
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     REPORTS
+===================================================== -->
+
+<section
+    class="page"
+    id="page-reports">
+
+    <div class="page-heading">
+
+        <h2>
+            Investigation Reports
+        </h2>
+
+        <p>
+            Generate analytical summaries from the current dataset.
+        </p>
+
+    </div>
+
+
+    <div class="panel">
+
+        <div class="panel-header">
+
+            <h3>
+                Available Reports
+            </h3>
+
+        </div>
+
+
+        <div class="panel-body">
+
+            <div class="entity-list">
+
+
+                <div class="entity-row">
+
+                    <div>
+
+                        <div class="entity-name">
+                            Network Overview Report
+                        </div>
+
+                        <div class="entity-id">
+                            Entities, relationships and communities
+                        </div>
+
+                    </div>
+
+
+                    <button
+                        class="btn"
+                        onclick="generateReport('overview')">
+
+                        Generate
+
+                    </button>
+
+                </div>
+
+
+
+                <div class="entity-row">
+
+                    <div>
+
+                        <div class="entity-name">
+                            Key Entity Report
+                        </div>
+
+                        <div class="entity-id">
+                            Centrality and connectivity analysis
+                        </div>
+
+                    </div>
+
+
+                    <button
+                        class="btn"
+                        onclick="generateReport('entities')">
+
+                        Generate
+
+                    </button>
+
+                </div>
+
+
+
+                <div class="entity-row">
+
+                    <div>
+
+                        <div class="entity-name">
+                            Pattern Analysis Report
+                        </div>
+
+                        <div class="entity-id">
+                            Detected analytical leads
+                        </div>
+
+                    </div>
+
+
+                    <button
+                        class="btn"
+                        onclick="generateReport('alerts')">
+
+                        Generate
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     SETTINGS
+===================================================== -->
+
+<section
+    class="page"
+    id="page-settings">
+
+    <div class="page-heading">
+
+        <h2>
+            System Settings
+        </h2>
+
+        <p>
+            Prototype configuration and system information.
+        </p>
+
+    </div>
+
+
+    <div class="panel">
+
+        <div class="panel-header">
+
+            <h3>
+                System Information
+            </h3>
+
+        </div>
+
+
+        <div class="panel-body">
+
+
+            <div class="detail-grid">
+
+
+                <div class="detail-item">
+
+                    <label>
+                        System
+                    </label>
+
+                    <span>
+                        AI Criminal Network Analysis
+                    </span>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <label>
+                        Version
+                    </label>
+
+                    <span>
+                        2.1 Prototype
+                    </span>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <label>
+                        Backend
+                    </label>
+
+                    <span>
+                        FastAPI
+                    </span>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <label>
+                        Database
+                    </label>
+
+                    <span>
+                        SQLite
+                    </span>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <label>
+                        Graph Engine
+                    </label>
+
+                    <span>
+                        NetworkX + Cytoscape
+                    </span>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <label>
+                        Dataset
+                    </label>
+
+                    <span>
+                        Synthetic Demonstration Data
+                    </span>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <label>
+                        Status
+                    </label>
+
+                    <span style="color:#65df9a;">
+                        Operational
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+</div>
+
+</main>
+
+</div>
+
+
+
+<!-- =====================================================
+     ENTITY / CASE MODAL
+===================================================== -->
+
+<div
+    id="entityModal"
+    style="
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.7);
+    z-index:100;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    ">
+
+
+    <div style="
+        background:#111a2e;
+        border:1px solid #34415c;
+        border-radius:12px;
+        width:100%;
+        max-width:600px;
+        max-height:85vh;
+        overflow:auto;
+    ">
+
+
+        <div class="panel-header">
+
+            <h3 id="modalTitle">
+                Details
+            </h3>
+
+
+            <button
+                class="btn btn-secondary"
+                onclick="closeModal()">
+
+                Close
+
+            </button>
+
+        </div>
+
+
+        <div class="panel-body">
+
+            <div id="entityDetails">
+
+                Loading...
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<script>
+
+/* =========================================================
+   GLOBAL VARIABLES
+========================================================= */
+
+let graphData = {
+    nodes: [],
+    edges: []
+};
+
+let entities = [];
+
+let topEntities = [];
+
+let alerts = [];
+
+let cyDashboard = null;
+
+let cyFull = null;
+
+
+/* =========================================================
+   PAGE NAVIGATION
+========================================================= */
+
+document
+.querySelectorAll(".nav-item")
+.forEach(button => {
+
+    button.addEventListener("click", () => {
+
+        showPage(
+            button.dataset.page
+        );
+
+    });
+
+});
+
+
+function showPage(page) {
+
+    document
+    .querySelectorAll(".page")
+    .forEach(p => {
+
+        p.classList.remove("active");
+
+    });
+
+
+    const target =
+        document.getElementById(
+            "page-" + page
+        );
+
+
+    if (target) {
+
+        target.classList.add("active");
+
+    }
+
+
+    document
+    .querySelectorAll(".nav-item")
+    .forEach(item => {
+
+        item.classList.toggle(
+            "active",
+            item.dataset.page === page
+        );
+
+    });
+
+
+    const titles = {
+
+        dashboard: "Dashboard",
+
+        network: "Network Analysis",
+
+        map: "Map Intelligence",
+
+        alerts: "Suspicious Patterns",
+
+        cases: "Case Management",
+
+        "previous-cases": "Previous Case Intelligence",
+
+        cctv: "CCTV Intelligence",
+
+        fir: "FIR Intelligence",
+
+        entities: "Entity Intelligence",
+
+        analytics: "Network Analytics",
+
+        import: "Data Import",
+
+        reports: "Reports",
+
+        settings: "Settings"
+
+    };
+
+
+    document
+    .getElementById("pageTitle")
+    .textContent =
+        titles[page] || "Dashboard";
+
+
+    if (page === "network") {
+
+        setTimeout(() => {
+
+            if (!cyFull) {
+
+                createFullGraph();
+
+            } else {
+
+                cyFull.resize();
+
+            }
+
+        }, 100);
+
+    }
+
+
+    if (page === "entities") {
+        loadEntityCaseOptions().then(()=>renderEntities());
+    }
+
+
+    if (page === "cases") {
+
+        renderCases();
+
+    }
+
+
+    if (page === "fir") {
+
+        const status = document.getElementById("firStatus");
+        if (status && !status.dataset.busy) {
+            status.textContent = "Ready";
+        }
+
+    }
+
+
+    if (page === "previous-cases") {
+        loadPreviousCaseOptions();
+        loadPreviousRepository();
+    }
+
+    if (page === "cctv") {
+        loadCCTVCaseOptions();
+    }
+
+    if (page === "analytics") {
+
+        renderAnalytics();
+
+    }
+
+
+    if (window.innerWidth < 1000) {
+
+        document
+        .getElementById("sidebar")
+        .classList.remove("open");
+
+    }
+
+}
+
+
+/* =========================================================
+   API HELPER
+========================================================= */
+
+async function safeJson(response, context = "API request") {
+    const text = await response.text();
+    let data = null;
+
+    if (text.trim()) {
+        try {
+            data = JSON.parse(text);
+        } catch (error) {
+            console.error(`${context}: server returned non-JSON response`, {
+                status: response.status,
+                contentType: response.headers.get("content-type"),
+                body: text.slice(0, 1000)
+            });
+            throw new Error(
+                `${context} returned an invalid server response (HTTP ${response.status}).`
+            );
+        }
+    }
+
+    if (!response.ok) {
+        throw new Error(
+            (data && (data.detail || data.message || data.error)) ||
+            `${context} failed (HTTP ${response.status}).`
+        );
+    }
+
+    return data || {};
+}
+
+async function api(url) {
+    try {
+        const response = await fetch(url);
+        return await safeJson(response, `API ${url}`);
+    } catch(error) {
+        console.error(error);
+        return null;
+    }
+}
+
+
+/* =========================================================
+   DASHBOARD
+========================================================= */
+
+async function loadDashboard() {
+
+
+    const network =
+        await api("/api/network");
+
+
+    if (network) {
+
+        document
+        .getElementById("statEntities")
+        .textContent =
+            network.entities;
+
+
+        document
+        .getElementById("statRelationships")
+        .textContent =
+            network.relationships;
+
+
+        document
+        .getElementById("statCommunities")
+        .textContent =
+            network.communities;
+
+    }
+
+
+    const alertData =
+        await api("/api/alerts");
+
+
+    if (alertData) {
+
+        alerts =
+            alertData.alerts || [];
+
+
+        document
+        .getElementById("statAlerts")
+        .textContent =
+            alerts.length;
+
+
+        renderAlerts();
+
+    }
+
+
+    const entityData =
+        await api("/api/entities");
+
+
+    if (entityData) {
+
+        entities =
+            entityData.entities || [];
+
+    }
+
+
+    const topData =
+        await api("/api/top-entities");
+
+
+    if (topData) {
+
+        topEntities =
+            topData.entities || [];
+
+
+        renderTopEntities();
+
+    }
+
+
+    const graph =
+        await api("/api/graph");
+
+
+    if (graph) {
+
+        graphData =
+            graph;
+
+
+        createDashboardGraph();
+
+    }
+
+}
+
+
+/* =========================================================
+   TOP ENTITIES
+========================================================= */
+
+function renderTopEntities() {
+
+    const container =
+        document.getElementById(
+            "topEntities"
+        );
+
+
+    if (!topEntities.length) {
+
+        container.innerHTML =
+            "<div style='color:#7f8ba3'>No data available</div>";
+
+        return;
+
+    }
+
+
+    container.innerHTML = "";
+
+
+    topEntities
+    .slice(0, 8)
+    .forEach((entity, index) => {
+
+
+        const row =
+            document.createElement("div");
+
+
+        row.className =
+            "entity-row";
+
+
+        row.innerHTML = `
+
+            <div>
+
+                <div class="entity-name">
+
+                    #${index + 1}
+                    ${escapeHTML(entity.name)}
+
+                </div>
+
+
+                <div class="entity-id">
+
+                    ${escapeHTML(entity.id)}
+
+                </div>
+
+            </div>
+
+
+            <div>
+
+                <span class="badge badge-person">
+
+                    ${entity.connections}
+                    links
+
+                </span>
+
+            </div>
+
+        `;
+
+
+        row.onclick =
+            () => openEntity(entity.id);
+
+
+        container.appendChild(row);
+
+    });
+
+}
+
+
+/* =========================================================
+   GRAPH COLORS
+========================================================= */
+
+function getNodeColor(type) {
+
+    const colors = {
+
+        PERSON: "#4da3ff",
+
+        VEHICLE: "#e2b35a",
+
+        LOCATION: "#59c99a",
+
+        CASE: "#c879d9"
+
+    };
+
+
+    return colors[type] || "#8792a8";
+
+}
+
+
+/* =========================================================
+   GRAPH ELEMENTS
+========================================================= */
+
+function graphElements() {
+
+
+    const nodes =
+        graphData.nodes.map(node => ({
+
+            data: {
+
+                id: node.id,
+
+                label: node.label,
+
+                type: node.type
+
+            }
+
+        }));
+
+
+    const edges =
+        graphData.edges.map(
+            (edge, index) => ({
+
+                data: {
+
+                    id:
+                        "edge-" +
+                        index,
+
+                    source:
+                        edge.source,
+
+                    target:
+                        edge.target,
+
+                    relationship:
+                        edge.relationship
+
+                }
+
+            })
+        );
+
+
+    return nodes.concat(edges);
+
+}
+
+
+/* =========================================================
+   GRAPH STYLE
+========================================================= */
+
+function graphStyle() {
+
+    return [
+
+        {
+
+            selector: "node",
+
+            style: {
+
+                "background-color":
+                    function(node) {
+
+                        return getNodeColor(
+                            node.data("type")
+                        );
+
+                    },
+
+                "label":
+                    "data(label)",
+
+                "color":
+                    "#dce6f5",
+
+                "font-size":
+                    "9px",
+
+                "text-valign":
+                    "bottom",
+
+                "text-margin-y":
+                    7,
+
+                "width":
+                    18,
+
+                "height":
+                    18,
+
+                "border-width":
+                    1,
+
+                "border-color":
+                    "#ffffff",
+
+                "border-opacity":
+                    .2
+
+            }
+
+        },
+
+
+        {
+
+            selector: "edge",
+
+            style: {
+
+                "width":
+                    1,
+
+                "line-color":
+                    "#46546e",
+
+                "target-arrow-color":
+                    "#46546e",
+
+                "target-arrow-shape":
+                    "triangle",
+
+                "curve-style":
+                    "bezier",
+
+                "opacity":
+                    .55
+
+            }
+
+        },
+
+
+        {
+
+            selector: ":selected",
+
+            style: {
+
+                "background-color":
+                    "#ffffff",
+
+                "line-color":
+                    "#ffffff",
+
+                "target-arrow-color":
+                    "#ffffff",
+
+                "border-width":
+                    3,
+
+                "border-color":
+                    "#ffffff"
+
+            }
+
+        }
+
+    ];
+
+}
+
+
+/* =========================================================
+   DASHBOARD GRAPH
+========================================================= */
+
+function createDashboardGraph() {
+
+
+    const container =
+        document.getElementById(
+            "networkGraph"
+        );
+
+
+    if (
+        !container ||
+        !graphData.nodes.length
+    ) {
+
+        return;
+
+    }
+
+
+    if (cyDashboard) {
+
+        cyDashboard.destroy();
+
+    }
+
+
+    cyDashboard =
+        cytoscape({
+
+            container,
+
+            elements:
+                graphElements(),
+
+            style:
+                graphStyle(),
+
+            layout: {
+
+                name:
+                    "cose",
+
+                animate:
+                    false,
+
+                padding:
+                    35
+
+            },
+
+            minZoom:
+                .2,
+
+            maxZoom:
+                3
+
+        });
+
+
+    cyDashboard.on(
+        "tap",
+        "node",
+        event => {
+
+            openEntity(
+                event.target.id()
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   FULL GRAPH
+========================================================= */
+
+function createFullGraph() {
+
+
+    const container =
+        document.getElementById(
+            "networkGraphFull"
+        );
+
+
+    if (
+        !container ||
+        !graphData.nodes.length
+    ) {
+
+        return;
+
+    }
+
+
+    if (cyFull) {
+
+        cyFull.destroy();
+
+    }
+
+
+    cyFull =
+        cytoscape({
+
+            container,
+
+            elements:
+                graphElements(),
+
+            style:
+                graphStyle(),
+
+            layout: {
+
+                name:
+                    "cose",
+
+                animate:
+                    true,
+
+                animationDuration:
+                    500,
+
+                padding:
+                    50
+
+            },
+
+            minZoom:
+                .1,
+
+            maxZoom:
+                4
+
+        });
+
+
+    cyFull.on(
+        "tap",
+        "node",
+        event => {
+
+            openEntity(
+                event.target.id()
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   GRAPH RESET
+========================================================= */
+
+function resetGraph() {
+
+    if (!cyFull) {
+
+        return;
+
+    }
+
+
+    cyFull
+    .edges()
+    .forEach(edge => {
+
+        edge.style(
+            "display",
+            "element"
+        );
+
+    });
+
+
+    document
+    .getElementById(
+        "relationshipFilter"
+    )
+    .value =
+        "ALL";
+
+
+    cyFull
+    .layout({
+
+        name:
+            "cose",
+
+        animate:
+            true,
+
+        padding:
+            50
+
+    })
+    .run();
+
+}
+
+
+/* =========================================================
+   GRAPH FILTER
+========================================================= */
+
+function filterGraph() {
+
+    if (!cyFull) {
+
+        return;
+
+    }
+
+
+    const selected =
+        document
+        .getElementById(
+            "relationshipFilter"
+        )
+        .value;
+
+
+    cyFull
+    .edges()
+    .forEach(edge => {
+
+        if (
+            selected === "ALL" ||
+            edge.data("relationship") === selected
+        ) {
+
+            edge.style(
+                "display",
+                "element"
+            );
+
+        } else {
+
+            edge.style(
+                "display",
+                "none"
+            );
+
+        }
+
+    });
+
+}
+
+
+/* =========================================================
+   ALERTS
+========================================================= */
+
+function renderAlerts() {
+
+
+    const container =
+        document.getElementById(
+            "alertsList"
+        );
+
+
+    document
+    .getElementById("alertCount")
+    .textContent =
+        alerts.length;
+
+
+    if (!alerts.length) {
+
+        container.innerHTML =
+            "<div style='color:#7f8ba3'>No analytical alerts detected.</div>";
+
+        return;
+
+    }
+
+
+    container.innerHTML = "";
+
+
+    alerts.forEach(alert => {
+
+
+        const item =
+            document.createElement("div");
+
+
+        item.className =
+            "alert";
+
+
+        const severity =
+            String(
+                alert.severity ||
+                "MEDIUM"
+            )
+            .toLowerCase();
+
+
+        item.innerHTML = `
+
+            <div class="alert-title">
+
+                <strong>
+                    ${escapeHTML(alert.type)}
+                </strong>
+
+                <span class="badge badge-${severity}">
+
+                    ${escapeHTML(
+                        alert.severity
+                    )}
+
+                </span>
+
+            </div>
+
+
+            <div style="
+                font-size:12px;
+                margin-bottom:7px;
+            ">
+
+                Entity:
+
+                <strong>
+                    ${escapeHTML(alert.entity)}
+                </strong>
+
+            </div>
+
+
+            <div class="alert-message">
+
+                ${escapeHTML(alert.message)}
+
+            </div>
+
+        `;
+
+
+        container.appendChild(item);
+
+    });
+
+}
+
+
+/* =========================================================
+   ENTITIES
+========================================================= */
+
+let selectedEntityCase="ALL";
+async function loadEntityCaseOptions(){
+    const select=document.getElementById("entityCaseFilter");
+    if(!select)return;
+    try{
+        const r=await fetch("/api/cases"); const d=await safeJson(r, "API response");
+        const cases=d.cases||[];
+        const current=selectedEntityCase;
+        select.innerHTML='<option value="ALL">All network entities</option>'+cases.map(c=>`<option value="${escapeHTML(c.case_id)}">${escapeHTML(c.case_id)} — ${escapeHTML(c.title)}</option>`).join("");
+        select.value=cases.some(c=>c.case_id===current)?current:"ALL";
+    }catch(e){console.error(e)}
+}
+async function renderEntities(){
+    const tbody=document.getElementById("entitiesTable"); if(!tbody)return;
+    const filter=document.getElementById("entityFilter")?.value||"ALL";
+    selectedEntityCase=document.getElementById("entityCaseFilter")?.value||"ALL";
+    let list=[];
+    if(selectedEntityCase!=="ALL"){
+        try{
+            const r=await fetch("/api/cases/"+encodeURIComponent(selectedEntityCase)+"/entities");
+            const d=await safeJson(r, "API response"); if(!r.ok)throw new Error(d.detail||"Unable to load case entities");
+            list=(d.entities||[]).map(e=>({id:e.id,name:e.name,type:String(e.type||"UNKNOWN").toUpperCase(),city:e.city||"",source:e.source||"FIR"}));
+        }catch(e){tbody.innerHTML=`<tr><td colspan="5">Unable to load entities for this case.</td></tr>`;console.error(e);return;}
+    }else{
+        list=entities||[];
+    }
+    if(filter!=="ALL")list=list.filter(e=>String(e.type||"").toUpperCase()===filter);
+    tbody.innerHTML="";
+    if(!list.length){tbody.innerHTML=`<tr><td colspan="5" style="color:#7f8ba3;padding:24px">${selectedEntityCase!=="ALL"?"No entities are attached to this case yet.":"No entities found."}</td></tr>`;return;}
+    list.forEach(entity=>{
+        const row=document.createElement("tr");
+        const badgeClass="badge-"+String(entity.type||"").toLowerCase();
+        row.innerHTML=`<td>${escapeHTML(entity.id)}</td><td>${escapeHTML(entity.name)}</td><td><span class="badge ${badgeClass}">${escapeHTML(entity.type)}</span></td><td>${escapeHTML(entity.city||"-")}</td><td><button class="btn" onclick="${selectedEntityCase!=="ALL"?`openCaseEntity('${escapeJS(entity.id)}','${escapeJS(selectedEntityCase)}')`:`openEntity('${escapeJS(entity.id)}')`}">View</button></td>`;
+        tbody.appendChild(row);
+    });
+}
+
+async function openCaseEntity(entityId, caseId){
+    try{
+        const [er,gr]=await Promise.all([
+            fetch("/api/cases/"+encodeURIComponent(caseId)+"/entities"),
+            fetch("/api/cases/"+encodeURIComponent(caseId)+"/graph")
+        ]);
+        const ed=await safeJson(er, "Entity API response"); const gd=await safeJson(gr, "Graph API response");
+        if(!er.ok||!gr.ok)throw new Error("Unable to load case entity");
+        const entity=(ed.entities||[]).find(x=>String(x.id)===String(entityId));
+        if(!entity)throw new Error("Entity not found in this case");
+        document.getElementById("modalTitle").textContent=entity.name||entity.id;
+        let html=`<div class="detail-grid"><div class="detail-item"><label>ID</label><span>${escapeHTML(entity.id)}</span></div><div class="detail-item"><label>Type</label><span>${escapeHTML(entity.type||"UNKNOWN")}</span></div><div class="detail-item"><label>Case</label><span>${escapeHTML(caseId)}</span></div><div class="detail-item"><label>Source</label><span>${escapeHTML(entity.source||"FIR")}</span></div></div><br><h3 style="font-size:14px;margin-bottom:12px">Connected Entities</h3>`;
+        const byId=new Map((gd.nodes||[]).map(n=>[String(n.id),n]));
+        const connections=(gd.edges||[]).filter(e=>String(e.source)===String(entityId)||String(e.target)===String(entityId));
+        if(connections.length){html+='<div class="entity-list">'+connections.map(e=>{const other=String(e.source)===String(entityId)?e.target:e.source;const n=byId.get(String(other))||{};return `<div class="entity-row"><div><div class="entity-name">${escapeHTML(n.label||other)}</div><div class="entity-id">${escapeHTML(n.type||"UNKNOWN")} • ${escapeHTML(e.relationship||"RELATED")}</div></div></div>`}).join('')+'</div>';}else html+='<div style="color:#7f8ba3">No case connections available.</div>';
+        document.getElementById("entityDetails").innerHTML=html; document.getElementById("entityModal").style.display="flex";
+    }catch(e){alert(e.message||"Unable to load case entity")}
+}
+
+/* =========================================================
+   ENTITY DETAILS
+========================================================= */
+
+async function openEntity(id) {
+
+
+    const data =
+        await api(
+            "/api/entity/" +
+            encodeURIComponent(id)
+        );
+
+
+    if (!data) {
+
+        alert(
+            "Unable to load entity."
+        );
+
+        return;
+
+    }
+
+
+    const modal =
+        document.getElementById(
+            "entityModal"
+        );
+
+
+    document
+    .getElementById("modalTitle")
+    .textContent =
+        data.details.name ||
+        data.id;
+
+
+    let html = `
+
+        <div class="detail-grid">
+
+            <div class="detail-item">
+
+                <label>
+                    ID
+                </label>
+
+                <span>
+                    ${escapeHTML(data.id)}
+                </span>
+
+            </div>
+
+
+            <div class="detail-item">
+
+                <label>
+                    Type
+                </label>
+
+                <span>
+
+                    ${escapeHTML(
+                        data.details.node_type ||
+                        "-"
+                    )}
+
+                </span>
+
+            </div>
+
+    `;
+
+
+    Object.entries(
+        data.details
+    ).forEach(
+        ([key, value]) => {
+
+
+            if (
+                key === "name" ||
+                key === "node_type"
+            ) {
+
+                return;
+
+            }
+
+
+            html += `
+
+                <div class="detail-item">
+
+                    <label>
+
+                        ${escapeHTML(key)}
+
+                    </label>
+
+                    <span>
+
+                        ${escapeHTML(value)}
+
+                    </span>
+
+                </div>
+
+            `;
+
+        }
+    );
+
+
+    html += `
+
+        </div>
+
+        <br>
+
+        <h3 style="
+            font-size:14px;
+            margin-bottom:12px;
+        ">
+
+            Connected Entities
+
+        </h3>
+
+    `;
+
+
+    if (
+        data.connections &&
+        data.connections.length
+    ) {
+
+
+        html +=
+            `<div class="entity-list">`;
+
+
+        data.connections
+        .forEach(connection => {
+
+
+            html += `
+
+                <div
+                    class="entity-row"
+                    onclick="openEntity('${escapeJS(connection.id)}')">
+
+                    <div>
+
+                        <div class="entity-name">
+
+                            ${escapeHTML(
+                                connection.id
+                            )}
+
+                        </div>
+
+
+                        <div class="entity-id">
+
+                            ${escapeHTML(
+                                connection.type
+                            )}
+
+                        </div>
+
+                    </div>
+
+
+                    <span>
+                        ›
+                    </span>
+
+                </div>
+
+            `;
+
+        });
+
+
+        html +=
+            `</div>`;
+
+    }
+    else {
+
+
+        html += `
+
+            <div style="
+                color:#7f8ba3;
+            ">
+
+                No connections available.
+
+            </div>
+
+        `;
+
+    }
+
+
+    document
+    .getElementById(
+        "entityDetails"
+    )
+    .innerHTML =
+        html;
+
+
+    modal.style.display =
+        "flex";
+
+}
+
+
+/* =========================================================
+   CLOSE MODAL
+========================================================= */
+
+function closeModal() {
+
+    document
+    .getElementById(
+        "entityModal"
+    )
+    .style.display =
+        "none";
+
+}
+
+
+/* =========================================================
+   CASE MANAGEMENT
+========================================================= */
+
+async function renderCases() {
+
+
+    const container =
+        document.getElementById(
+            "casesList"
+        );
+
+
+    if (!container) {
+
+        return;
+
+    }
+
+
+    container.innerHTML =
+        "<div style='color:#7f8ba3'>Loading cases...</div>";
+
+
+    const data =
+        await api(
+            "/api/cases"
+        );
+
+
+    if (!data) {
+
+        container.innerHTML =
+            "<div style='color:#ff858d'>Unable to load cases.</div>";
+
+        return;
+
+    }
+
+
+    const cases =
+        data.cases || [];
+
+
+    /* CASE STATISTICS */
+
+
+    document
+    .getElementById(
+        "totalCases"
+    )
+    .textContent =
+        cases.length;
+
+
+    document
+    .getElementById(
+        "openCases"
+    )
+    .textContent =
+        cases.filter(
+            c =>
+                c.status === "OPEN"
+        ).length;
+
+
+    document
+    .getElementById(
+        "reviewCases"
+    )
+    .textContent =
+        cases.filter(
+            c =>
+                c.status === "UNDER REVIEW"
+        ).length;
+
+
+    document
+    .getElementById(
+        "highCases"
+    )
+    .textContent =
+        cases.filter(
+            c =>
+                c.priority === "HIGH" ||
+                c.priority === "CRITICAL"
+        ).length;
+
+
+    /* EMPTY STATE */
+
+
+    if (!cases.length) {
+
+        container.innerHTML = `
+
+            <div style="
+                text-align:center;
+                padding:35px;
+                color:#7f8ba3;
+            ">
+
+                No cases have been created yet.
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    /* CASE TABLE */
+
+
+    container.innerHTML = `
+
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Case ID
+                        </th>
+
+                        <th>
+                            Title
+                        </th>
+
+                        <th>
+                            Priority
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                        <th>
+                            Created
+                        </th>
+
+                        <th>
+                            Action
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    ${cases.map(
+                        caseItem => {
+
+
+                            const priority =
+                                String(
+                                    caseItem.priority ||
+                                    "MEDIUM"
+                                )
+                                .toLowerCase();
+
+
+                            return `
+
+                                <tr>
+
+
+                                    <td>
+
+                                        <strong>
+
+                                            ${escapeHTML(
+                                                caseItem.case_id
+                                            )}
+
+                                        </strong>
+
+                                    </td>
+
+
+                                    <td>
+
+                                        ${escapeHTML(
+                                            caseItem.title
+                                        )}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        <span class="badge ${
+                                            priority === "high" ||
+                                            priority === "critical"
+                                            ? "badge-high"
+                                            : priority === "medium"
+                                            ? "badge-medium"
+                                            : "badge-low"
+                                        }">
+
+                                            ${escapeHTML(
+                                                caseItem.priority
+                                            )}
+
+                                        </span>
+
+                                    </td>
+
+
+                                    <td>
+
+                                        <select
+                                            onchange="updateCaseStatus(
+                                                '${escapeJS(caseItem.case_id)}',
+                                                this.value
+                                            )"
+                                            style="
+                                                padding:6px;
+                                                font-size:11px;
+                                            "
+                                        >
+
+
+                                            <option
+                                                value="OPEN"
+                                                ${
+                                                    caseItem.status === "OPEN"
+                                                    ? "selected"
+                                                    : ""
+                                                }>
+
+                                                OPEN
+
+                                            </option>
+
+
+                                            <option
+                                                value="UNDER REVIEW"
+                                                ${
+                                                    caseItem.status === "UNDER REVIEW"
+                                                    ? "selected"
+                                                    : ""
+                                                }>
+
+                                                UNDER REVIEW
+
+                                            </option>
+
+
+                                            <option
+                                                value="ON HOLD"
+                                                ${
+                                                    caseItem.status === "ON HOLD"
+                                                    ? "selected"
+                                                    : ""
+                                                }>
+
+                                                ON HOLD
+
+                                            </option>
+
+
+                                            <option
+                                                value="CLOSED"
+                                                ${
+                                                    caseItem.status === "CLOSED"
+                                                    ? "selected"
+                                                    : ""
+                                                }>
+
+                                                CLOSED
+
+                                            </option>
+
+                                        </select>
+
+                                    </td>
+
+
+                                    <td>
+
+                                        <span style="
+                                            color:#7f8ba3;
+                                            font-size:11px;
+                                        ">
+
+                                            ${escapeHTML(
+                                                formatCaseDate(
+                                                    caseItem.created_at
+                                                )
+                                            )}
+
+                                        </span>
+
+                                    </td>
+
+
+                                    <td>
+
+                                        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+
+                                            <button
+                                                class="btn"
+                                                onclick="openCaseWorkspace(
+                                                    '${escapeJS(caseItem.case_id)}'
+                                                )">
+                                                Investigate
+                                            </button>
+
+                                            <button
+                                                class="btn btn-secondary"
+                                                onclick="openCase(
+                                                    '${escapeJS(caseItem.case_id)}'
+                                                )">
+                                                Details
+                                            </button>
+
+                                            <button
+                                                class="btn btn-danger"
+                                                onclick="deleteCase(
+                                                    '${escapeJS(caseItem.case_id)}',
+                                                    '${escapeJS(caseItem.title || '')}'
+                                                )">
+                                                🗑 Delete
+                                            </button>
+
+                                        </div>
+
+                                    </td>
+
+                                </tr>
+
+                            `;
+
+                        }
+                    ).join("")}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================================================
+   CREATE CASE
+========================================================= */
+
+async function createNewCase() {
+
+
+    const caseId =
+        document
+        .getElementById(
+            "newCaseId"
+        )
+        .value
+        .trim();
+
+
+    const title =
+        document
+        .getElementById(
+            "newCaseTitle"
+        )
+        .value
+        .trim();
+
+
+    const description =
+        document
+        .getElementById(
+            "newCaseDescription"
+        )
+        .value
+        .trim();
+
+
+    const priority =
+        document
+        .getElementById(
+            "newCasePriority"
+        )
+        .value;
+
+
+    const message =
+        document.getElementById(
+            "caseCreateMessage"
+        );
+
+
+    if (
+        !caseId ||
+        !title
+    ) {
+
+        message.style.color =
+            "#ff858d";
+
+        message.textContent =
+            "Case ID and title are required.";
+
+        return;
+
+    }
+
+
+    message.style.color =
+        "#7f8ba3";
+
+    message.textContent =
+        "Creating case...";
+
+
+    try {
+
+
+        const response =
+            await fetch(
+                "/api/cases",
+                {
+
+                    method:
+                        "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body:
+                        JSON.stringify({
+
+                            case_id:
+                                caseId,
+
+                            title:
+                                title,
+
+                            description:
+                                description,
+
+                            priority:
+                                priority
+
+                        })
+
+                }
+            );
+
+
+        const data =
+            await safeJson(response, "API response");
+
+
+        if (!response.ok) {
+
+            message.style.color =
+                "#ff858d";
+
+            message.textContent =
+                data.detail ||
+                "Unable to create case.";
+
+            return;
+
+        }
+
+
+        message.style.color =
+            "#65df9a";
+
+        message.textContent =
+            "Case created successfully.";
+
+
+        /* CLEAR FORM */
+
+
+        document
+        .getElementById(
+            "newCaseId"
+        )
+        .value = "";
+
+
+        document
+        .getElementById(
+            "newCaseTitle"
+        )
+        .value = "";
+
+
+        document
+        .getElementById(
+            "newCaseDescription"
+        )
+        .value = "";
+
+
+        /* REFRESH */
+
+
+        await renderCases();
+
+    }
+    catch(error) {
+
+        console.error(error);
+
+        message.style.color =
+            "#ff858d";
+
+        message.textContent =
+            "Server connection failed.";
+
+    }
+
+}
+
+
+/* =========================================================
+   UPDATE CASE STATUS
+========================================================= */
+
+async function deleteCase(caseId, title = "") {
+    const label = title ? `${caseId} — ${title}` : caseId;
+    const confirmed = window.confirm(
+        `Delete ${label}?\n\nThis permanently removes the case and its case-specific entities and relationships. This action cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    const response = await fetch(`/api/cases/${encodeURIComponent(caseId)}`, {
+        method: "DELETE"
+    });
+
+    const data = await safeJson(response, `Delete case ${caseId}`);
+    if (!data) return;
+
+    if (typeof window.currentWorkspaceCaseId !== "undefined" && window.currentWorkspaceCaseId === caseId) {
+        window.currentWorkspaceCaseId = null;
+    }
+
+    alert("Case deleted successfully.");
+    await renderCases();
+    await loadEntityCaseOptions();
+    const mapFilter = document.getElementById("mapCaseFilter");
+    if (mapFilter && mapFilter.value === caseId) {
+        mapFilter.value = "";
+        if (typeof loadMapData === "function") await loadMapData();
+    }
+    showPage("cases");
+}
+
+async function deleteWorkspaceCase() {
+    const caseId = window.currentWorkspaceCaseId || document.getElementById("workspaceCaseId")?.textContent?.replace(/^Case:\s*/, "").trim();
+    if (!caseId || caseId === "—") {
+        alert("No case is currently selected.");
+        return;
+    }
+    const title = document.getElementById("workspaceCaseTitle")?.textContent || "";
+    await deleteCase(caseId, title);
+}
+
+async function updateCaseStatus(
+    caseId,
+    status
+) {
+
+
+    try {
+
+
+        const response =
+            await fetch(
+
+                "/api/cases/" +
+                encodeURIComponent(caseId) +
+                "/status",
+
+                {
+
+                    method:
+                        "PATCH",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body:
+                        JSON.stringify({
+
+                            status:
+                                status
+
+                        })
+
+                }
+
+            );
+
+
+        const data =
+            await safeJson(response, "API response");
+
+
+        if (!response.ok) {
+
+            alert(
+                data.detail ||
+                "Unable to update case."
+            );
+
+            return;
+
+        }
+
+
+        await renderCases();
+
+    }
+    catch(error) {
+
+        console.error(error);
+
+        alert(
+            "Unable to connect to server."
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   OPEN CASE
+========================================================= */
+
+async function openCase(caseId) {
+
+
+    const data =
+        await api(
+            "/api/cases/" +
+            encodeURIComponent(caseId)
+        );
+
+
+    if (
+        !data ||
+        !data.case
+    ) {
+
+        alert(
+            "Unable to load case details."
+        );
+
+        return;
+
+    }
+
+
+    const caseItem =
+        data.case;
+
+
+    const modal =
+        document.getElementById(
+            "entityModal"
+        );
+
+
+    document
+    .getElementById(
+        "modalTitle"
+    )
+    .textContent =
+        caseItem.title;
+
+
+    document
+    .getElementById(
+        "entityDetails"
+    )
+    .innerHTML = `
+
+
+        <div class="detail-grid">
+
+
+            <div class="detail-item">
+
+                <label>
+                    Case ID
+                </label>
+
+                <span>
+
+                    ${escapeHTML(
+                        caseItem.case_id
+                    )}
+
+                </span>
+
+            </div>
+
+
+            <div class="detail-item">
+
+                <label>
+                    Title
+                </label>
+
+                <span>
+
+                    ${escapeHTML(
+                        caseItem.title
+                    )}
+
+                </span>
+
+            </div>
+
+
+            <div class="detail-item">
+
+                <label>
+                    Priority
+                </label>
+
+                <span>
+
+                    ${escapeHTML(
+                        caseItem.priority
+                    )}
+
+                </span>
+
+            </div>
+
+
+            <div class="detail-item">
+
+                <label>
+                    Status
+                </label>
+
+                <span>
+
+                    ${escapeHTML(
+                        caseItem.status
+                    )}
+
+                </span>
+
+            </div>
+
+
+            <div class="detail-item">
+
+                <label>
+                    Created
+                </label>
+
+                <span>
+
+                    ${escapeHTML(
+                        formatCaseDate(
+                            caseItem.created_at
+                        )
+                    )}
+
+                </span>
+
+            </div>
+
+
+        </div>
+
+
+        <br>
+
+
+        <div class="detail-item">
+
+            <label>
+                Description
+            </label>
+
+            <span>
+
+                ${
+                    escapeHTML(
+                        caseItem.description ||
+                        "No description provided."
+                    )
+                }
+
+            </span>
+
+        </div>
+
+
+        <br>
+
+
+        <div class="notice">
+
+            ⚠ This case record is part of the
+            synthetic demonstration system.
+            Analytical findings should be independently
+            reviewed before any decision is made.
+
+        </div>
+
+    `;
+
+
+    modal.style.display =
+        "flex";
+
+}
+
+
+/* =========================================================
+   FORMAT DATE
+========================================================= */
+
+function formatCaseDate(value) {
+
+
+    if (!value) {
+
+        return "-";
+
+    }
+
+
+    const date =
+        new Date(value);
+
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return value;
+
+    }
+
+
+    return date.toLocaleString();
+
+}
+
+
+/* =========================================================
+   ANALYTICS
+========================================================= */
+
+function renderAnalytics() {
+
+
+    const tbody =
+        document.getElementById(
+            "analyticsTable"
+        );
+
+
+    if (!tbody) {
+
+        return;
+
+    }
+
+
+    tbody.innerHTML = "";
+
+
+    topEntities
+    .forEach(
+        (entity, index) => {
+
+
+            const row =
+                document.createElement(
+                    "tr"
+                );
+
+
+            row.innerHTML = `
+
+                <td>
+                    ${index + 1}
+                </td>
+
+
+                <td>
+                    ${escapeHTML(
+                        entity.name
+                    )}
+                </td>
+
+
+                <td>
+
+                    <span class="badge badge-person">
+
+                        ${escapeHTML(
+                            entity.type
+                        )}
+
+                    </span>
+
+                </td>
+
+
+                <td>
+                    ${entity.connections}
+                </td>
+
+
+                <td>
+                    ${entity.betweenness}
+                </td>
+
+            `;
+
+
+            tbody.appendChild(row);
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   GLOBAL SEARCH
+========================================================= */
+
+function globalSearch() {
+
+
+    const query =
+        document
+        .getElementById(
+            "globalSearch"
+        )
+        .value
+        .toLowerCase()
+        .trim();
+
+
+    if (!query) {
+
+        return;
+
+    }
+
+
+    const result =
+        entities.find(
+            entity =>
+
+                String(entity.id)
+                .toLowerCase()
+                .includes(query)
+
+                ||
+
+                String(entity.name)
+                .toLowerCase()
+                .includes(query)
+
+        );
+
+
+    if (result) {
+
+
+        showPage(
+            "entities"
+        );
+
+
+        document
+        .getElementById(
+            "entityFilter"
+        )
+        .value =
+            "ALL";
+
+
+        renderEntities();
+
+
+        setTimeout(
+            () => {
+
+                openEntity(
+                    result.id
+                );
+
+            },
+            100
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   REPORTS
+========================================================= */
+
+function generateReport(type) {
+
+
+    let content = "";
+
+
+    if (
+        type === "overview"
+    ) {
+
+
+        content =
+
+`AI CRIMINAL NETWORK ANALYSIS
+NETWORK OVERVIEW REPORT
+
+Entities: ${document.getElementById("statEntities").textContent}
+Relationships: ${document.getElementById("statRelationships").textContent}
+Communities: ${document.getElementById("statCommunities").textContent}
+
+Generated from synthetic demonstration data.
+
+NOTE:
+Analytical results are investigative leads only.
+They do not establish criminal activity or guilt.`;
+
+
+    }
+
+
+    if (
+        type === "entities"
+    ) {
+
+
+        content =
+
+`KEY ENTITY ANALYSIS
+
+${topEntities.map(
+    (e, i) =>
+
+`${i + 1}. ${e.name} (${e.id})
+Type: ${e.type}
+Connections: ${e.connections}
+Betweenness: ${e.betweenness}
+`
+).join("\n")}
+
+Generated from synthetic demonstration data.`;
+
+    }
+
+
+    if (
+        type === "alerts"
+    ) {
+
+
+        content =
+
+`PATTERN ANALYSIS REPORT
+
+Total alerts: ${alerts.length}
+
+${alerts.map(
+    a =>
+
+`${a.type}
+Severity: ${a.severity}
+Entity: ${a.entity}
+${a.message}
+`
+).join("\n")}
+
+IMPORTANT:
+These are analytical leads and require human review.`;
+
+    }
+
+
+    const blob =
+        new Blob(
+            [content],
+            {
+                type:
+                    "text/plain"
+            }
+        );
+
+
+    const url =
+        URL.createObjectURL(
+            blob
+        );
+
+
+    const a =
+        document.createElement(
+            "a"
+        );
+
+
+    a.href =
+        url;
+
+
+    a.download =
+        "network-analysis-report.txt";
+
+
+    a.click();
+
+
+    URL.revokeObjectURL(
+        url
+    );
+
+}
+
+
+/* =========================================================
+   MOBILE SIDEBAR
+========================================================= */
+
+function toggleSidebar() {
+
+    document
+    .getElementById(
+        "sidebar"
+    )
+    .classList.toggle(
+        "open"
+    );
+
+}
+
+
+/* =========================================================
+   SECURITY HELPERS
+========================================================= */
+
+function escapeHTML(value) {
+
+    return String(
+        value ?? ""
+    )
+    .replace(
+        /&/g,
+        "&amp;"
+    )
+    .replace(
+        /</g,
+        "&lt;"
+    )
+    .replace(
+        />/g,
+        "&gt;"
+    )
+    .replace(
+        /"/g,
+        "&quot;"
+    )
+    .replace(
+        /'/g,
+        "&#039;"
+    );
+
+}
+
+
+function escapeJS(value) {
+
+    return String(
+        value ?? ""
+    )
+    .replace(
+        /\\/g,
+        "\\\\"
+    )
+    .replace(
+        /'/g,
+        "\\'"
+    );
+
+}
+
+
+
+/* =========================================================
+   FIR INTELLIGENCE
+========================================================= */
+
+function setFIRStatus(message, kind="") {
+    const el=document.getElementById("firStatus");
+    if(!el)return;
+    el.textContent=message;
+    el.className="fir-status"+(kind?" "+kind:"");
+}
+
+function loadSampleFIR(){
+    const el=document.getElementById("firText");
+    if(!el)return;
+    el.value=`SYNTHETIC FIRST INFORMATION REPORT\n\nFIR No: FIR-2026-002\nCase ID: CASE-002\nDate: 2026-08-12\n\nComplainant: Person A\nPersons Mentioned: Person A, Person B, Person C\nLocation: Location X\nVehicle: V1\nPhone: 9000000001\nAccount: ACC-001\n\nNarrative:\nThe synthetic report describes an alleged incident involving the persons and identifiers listed above. Person A was reportedly associated with Vehicle V1 near Location X. Communication and transaction records may be reviewed for possible relationships.\n\nThis document is synthetic demonstration data created for an investigator-assistance prototype.`;
+    setFIRStatus("Sample loaded","fir-success");
+}
+
+function readFIRFile(event){
+    const file=event.target.files && event.target.files[0];
+    if(!file)return;
+    const name=file.name.toLowerCase();
+    const supported=name.endsWith(".pdf")||name.endsWith(".docx")||name.endsWith(".txt");
+    if(!supported){
+        setFIRStatus("Please upload PDF, DOCX, or TXT","fir-warning");
+        event.target.value="";
+        return;
+    }
+    if(file.size>10*1024*1024){
+        setFIRStatus("File is too large (max 10 MB)","fir-warning");
+        event.target.value="";
+        return;
+    }
+    if(name.endsWith(".txt")){
+        const reader=new FileReader();
+        reader.onload=()=>{
+            document.getElementById("firText").value=String(reader.result||"");
+            setFIRStatus("TXT loaded — click Analyze FIR","fir-success");
+        };
+        reader.onerror=()=>setFIRStatus("Could not read file","fir-error");
+        reader.readAsText(file);
+        return;
+    }
+    setFIRStatus(`${name.endsWith(".pdf")?"PDF":"DOCX"} selected — click Analyze FIR to process`,"fir-success");
+    window.selectedFIRFile=file;
+}
+function firEscape(value){
+    return String(value??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+}
+
+function renderFIRResults(data){
+    const box=document.getElementById("firResults");
+    if(!box)return;
+    const e=data.extracted||{};
+    const entities=e.entities||{};
+    const relations=data.relationships||[];
+    const matched=data.matched_entities||[];
+    const leads=data.analytical_leads||[];
+
+    const entityGroups=[
+        ["Persons",entities.persons||[]],
+        ["Locations",entities.locations||[]],
+        ["Vehicles",entities.vehicles||[]],
+        ["Phones",entities.phones||[]],
+        ["Accounts",entities.accounts||[]]
+    ];
+
+    let html=`<div class="fir-result-header"><div><div class="fir-result-title">${firEscape(data.case_id||"Unassigned Case")}</div><div class="fir-result-sub">${firEscape(data.fir_number||"No FIR number detected")} • ${firEscape(data.date||"No date detected")}</div></div><span class="badge badge-location">${firEscape(data.extraction_method||"DOCUMENT")}</span></div>`;
+
+    html+=`<div class="fir-entity-grid">`;
+    html+=`<div class="fir-entity"><label>Title</label><strong>${firEscape(data.title||"Synthetic FIR Analysis")}</strong></div>`;
+    html+=`<div class="fir-entity"><label>Extracted Facts</label><strong>${firEscape(String(data.entity_count??0))}</strong></div>`;
+    html+=`</div>`;
+
+    entityGroups.forEach(([label,items])=>{
+        if(!items.length)return;
+        html+=`<div class="fir-section-title">${firEscape(label)}</div><div class="fir-chip-wrap">`;
+        items.forEach(item=>html+=`<span class="fir-chip">${firEscape(item)}</span>`);
+        html+=`</div>`;
+    });
+
+    html+=`<div class="fir-section-title">Matched Synthetic Network Entities</div>`;
+    if(matched.length){
+        html+=matched.map(m=>`<div class="fir-relation"><strong>${firEscape(m.name||m.id)}</strong> — ${firEscape(m.type||"unknown")}<br><span style="color:#7f8ba3">${firEscape(m.id||"")}</span></div>`).join("");
+    }else html+=`<div class="fir-relation" style="color:#7f8ba3">No exact synthetic-network matches were found.</div>`;
+
+    html+=`<div class="fir-section-title">Extracted Relationships</div>`;
+    if(relations.length) html+=relations.map(r=>`<div class="fir-relation"><strong>${firEscape(r.source)}</strong> → <strong>${firEscape(r.target)}</strong><br><span style="color:#7f8ba3">${firEscape(r.relationship||"RELATED")}</span></div>`).join("");
+    else html+=`<div class="fir-relation" style="color:#7f8ba3">No structured relationships were detected.</div>`;
+
+    html+=`<div class="fir-section-title">Analytical Leads</div>`;
+    if(leads.length) html+=leads.map(l=>`<div class="fir-relation"><strong>${firEscape(l.title)}</strong><br><span style="color:#7f8ba3">${firEscape(l.detail)}</span></div>`).join("");
+    else html+=`<div class="fir-relation" style="color:#65df9a">No additional leads generated from the extracted facts.</div>`;
+
+    if(data.case_created){
+        html+=`<div class="notice" style="margin-top:14px">✓ Case <strong>${firEscape(data.case_id)}</strong> was created/linked in Case Management. <button class="btn" style="margin-left:8px" onclick="openCaseWorkspace('${escapeJS(data.case_id)}')">Open Investigation Workspace</button></div>`;
+    }
+
+    html+=`<div class="notice" style="margin-top:14px">Extraction is document parsing/correlation for the synthetic prototype. It is not a trained crime-prediction model and does not establish guilt.</div>`;
+    box.innerHTML=html;
+}
+
+async function analyzeFIR(){
+    const file=window.selectedFIRFile;
+    const text=document.getElementById("firText")?.value?.trim();
+    if(!file && !text){setFIRStatus("Upload a document or paste a FIR first","fir-warning");return;}
+    setFIRStatus("Analyzing…");
+    const button=document.querySelector('#page-fir button[onclick="analyzeFIR()"]');
+    if(button)button.disabled=true;
+    try{
+        let r;
+        if(file){
+            const form=new FormData();
+            form.append("file",file);
+            form.append("create_case","false");
+            form.append("priority","MEDIUM");
+            r=await fetch("/api/analyze-fir-file",{method:"POST",body:form});
+        }else{
+            r=await fetch("/api/analyze-fir",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})});
+        }
+        const data=await safeJson(r, "API response");
+        if(!r.ok)throw new Error(data.detail||"FIR analysis failed");
+        renderFIRResults(data);
+        setFIRStatus(`Analysis complete${data.document_type?" • "+data.document_type:""}`,"fir-success");
+        window.selectedFIRFile=null;
+        const input=document.getElementById("firFile");
+        if(input)input.value="";
+        if(typeof renderCases==="function")await renderCases();
+    }catch(error){
+        console.error(error);
+        setFIRStatus(error.message||"Analysis failed","fir-error");
+        document.getElementById("firResults").innerHTML='<div class="fir-empty fir-error">Unable to analyze this document. Check that the file is a readable PDF/DOCX/TXT and the backend dependencies are installed.</div>';
+    }finally{
+        if(button)button.disabled=false;
+    }
+}
+/* =========================================================
+   INVESTIGATION WORKSPACE
+========================================================= */
+let cyCaseWorkspace=null;
+let currentWorkspaceCaseId=null;
+let currentWorkspaceCase=null;
+
+function escapeWorkspaceHTML(value){return String(value??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;")}
+function escapeWorkspaceJS(value){return String(value??"").replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\n/g,"\\n").replace(/\r/g,"\\r")}
+function formatWorkspaceDate(value){if(!value)return "—";const d=new Date(value);return Number.isNaN(d.getTime())?value:d.toLocaleString()}
+function setWorkspaceText(id,value){const el=document.getElementById(id);if(el)el.textContent=value??"—"}
+
+async function openCaseWorkspace(caseId){
+    window.currentWorkspaceCaseId = caseId;
+    currentWorkspaceCaseId=caseId;showPage("case-workspace");
+    setWorkspaceText("workspaceCaseTitle","Loading investigation…");
+    setWorkspaceText("workspaceCaseId","Case: "+caseId);
+    try{
+        const r=await fetch("/api/cases/"+encodeURIComponent(caseId));
+        if(!r.ok)throw new Error("Case could not be loaded");
+        const d=await safeJson(r, "API response");currentWorkspaceCase=d.case;populateWorkspaceCase(d.case);
+        await Promise.all([loadWorkspaceNetwork(caseId),loadWorkspaceLeads(),loadWorkspaceAnalysis(caseId)]);
+    }catch(e){console.error(e);setWorkspaceText("workspaceCaseTitle","Unable to load case")}
+}
+function populateWorkspaceCase(c){
+    if(!c)return;setWorkspaceText("workspaceCaseTitle",c.title||"Investigation Workspace");setWorkspaceText("workspaceCaseId","Case: "+(c.case_id||"—"));setWorkspaceText("workspaceCaseCreated","Created: "+formatWorkspaceDate(c.created_at));setWorkspaceText("workspaceCasePriority","Priority: "+(c.priority||"—"));setWorkspaceText("workspacePriorityStat",c.priority||"—");setWorkspaceText("workspaceInfoTitle",c.title||"Untitled case");setWorkspaceText("workspaceInfoDescription",c.description||"No description available.");const s=document.getElementById("workspaceCaseStatus");if(s)s.value=c.status||"OPEN";
+}
+async function loadWorkspaceNetwork(caseId){
+    try{
+        const r=await fetch("/api/cases/"+encodeURIComponent(caseId)+"/graph");
+        if(!r.ok)throw new Error("Case network unavailable");
+        const g=await safeJson(r, "API response"); const nodes=g.nodes||[], edges=g.edges||[];
+        setWorkspaceText("workspaceEntityStat",nodes.length); setWorkspaceText("workspaceLinkStat",edges.length);
+        const sub=document.getElementById("workspaceNetworkSubtitle");
+        if(sub)sub.textContent=nodes.length?"Entities extracted from this case FIR":"No entities have been attached to this case yet";
+        renderWorkspaceEntities(nodes); renderWorkspaceNetwork(nodes,edges);
+    }catch(e){console.error(e);setWorkspaceText("workspaceEntityStat",0);setWorkspaceText("workspaceLinkStat",0);renderWorkspaceEntities([]);}
+}
+function renderWorkspaceEntities(nodes){const c=document.getElementById("workspaceEntityList");if(!c)return;if(!nodes.length){c.innerHTML='<div class="workspace-list-sub">No entities available.</div>';return}c.innerHTML=nodes.slice(0,18).map(n=>`<div class="workspace-list-item" style="cursor:pointer" onclick="openWorkspaceEntity('${escapeWorkspaceJS(n.id)}')"><div class="workspace-list-main"><div class="workspace-list-name">${escapeWorkspaceHTML(n.label||n.name||n.id)}</div><span class="badge">${escapeWorkspaceHTML(n.type||"unknown").toUpperCase()}</span></div><div class="workspace-list-sub">Entity ID: ${escapeWorkspaceHTML(n.id)}</div></div>`).join("")}
+function openWorkspaceEntity(id){
+ const caseId=currentWorkspaceCaseId||window.currentWorkspaceCaseId;
+ if(caseId&&typeof openCaseEntity==="function"){openCaseEntity(id,caseId);return}
+ if(typeof openEntity==="function"){openEntity(id);return}
+ console.info("Entity selected:",id)
+}
+function renderWorkspaceNetwork(nodes,edges){
+ const c=document.getElementById("caseWorkspaceNetwork");
+ if(!c||typeof cytoscape==="undefined")return;
+ if(cyCaseWorkspace)try{cyCaseWorkspace.destroy()}catch(e){}
+ c.innerHTML="";
+ const tm={PERSON:{color:"#22E6D7",label:"Person"},PHONE:{color:"#4D9DFF",label:"Phone"},VEHICLE:{color:"#A66CFF",label:"Vehicle"},ACCOUNT:{color:"#FF8A4C",label:"Account"},LOCATION:{color:"#4CFF8A",label:"Location"},EVENT:{color:"#B8C7D9",label:"Event"},ORGANIZATION:{color:"#FF4FD8",label:"Organization"},CASE:{color:"#FFD166",label:"Case"}};
+ const degreeMap=new Map();
+ (edges||[]).forEach(e=>{const a=String(e.source),b=String(e.target);degreeMap.set(a,(degreeMap.get(a)||0)+1);degreeMap.set(b,(degreeMap.get(b)||0)+1)});
+ const ranked=(nodes||[]).map(n=>({id:String(n.id),degree:degreeMap.get(String(n.id))||0})).sort((a,b)=>b.degree-a.degree);
+ const keyIds=new Set(ranked.slice(0,Math.min(3,ranked.length)).map(x=>x.id));
+ const elements=[...(nodes||[]).map(n=>({data:{id:String(n.id),label:n.label||n.name||n.id,type:String(n.type||"UNKNOWN").toUpperCase(),degree:degreeMap.get(String(n.id))||0},classes:keyIds.has(String(n.id))?"key-node":""})),...(edges||[]).map((e,i)=>({data:{id:"edge-"+i,source:String(e.source),target:String(e.target),relationship:e.relationship||"RELATED"}}))];
+ const legend=document.createElement("div"); legend.className="graph-vigil-legend";
+ legend.innerHTML=Object.entries(tm).filter(([k])=>(nodes||[]).some(n=>String(n.type||"").toUpperCase()===k)).map(([k,m])=>`<span class="vrow"><span class="dot" style="background:${m.color};color:${m.color}"></span>${m.label}</span>`).join(""); c.appendChild(legend);
+ const title=document.createElement("div"); title.className="graph-vigil-title"; title.textContent="Interactive relationship map"; c.appendChild(title);
+ cyCaseWorkspace=cytoscape({
+  container:c,elements,wheelSensitivity:.16,minZoom:.25,maxZoom:3.2,
+  layout:{name:"cose",animate:true,animationDuration:850,padding:110,idealEdgeLength:175,nodeRepulsion:2600,edgeElasticity:.16,gravity:.08,numIter:900,randomize:true},
+  style:[
+   {selector:"node",style:{"background-color":e=>tm[e.data("type")]?.color||"#8792a8","shape":"ellipse","width":32,"height":32,"label":"data(label)","color":"#B8C2CC","font-family":"IBM Plex Mono,monospace","font-size":9,"font-weight":500,"text-valign":"bottom","text-halign":"center","text-margin-y":7,"text-wrap":"ellipsis","text-max-width":105,"border-width":1.5,"border-color":"#111820","overlay-opacity":0,"shadow-blur":8,"shadow-opacity":.32,"shadow-color":e=>tm[e.data("type")]?.color||"#8792a8"}},
+   {selector:"node.key-node",style:{width:42,height:42,"border-width":2.5,"border-color":"#D9A441","shadow-blur":16,"shadow-opacity":.75,"shadow-color":"#D9A441","font-size":10,"font-weight":600}},
+   {selector:"edge",style:{width:1,"line-color":"#34424E","target-arrow-color":"#465562","target-arrow-shape":"triangle","arrow-scale":.55,"curve-style":"bezier","control-point-step-size":28,"label":"","font-family":"IBM Plex Mono,monospace","font-size":8,"color":"#82909D","text-rotation":"autorotate","text-background-color":"#0B0F14","text-background-opacity":.9,"text-background-padding":"3px","opacity":.62}},
+   {selector:"edge.active-edge",style:{width:2.2,"line-color":"#4FA3A0","target-arrow-color":"#4FA3A0","label":"data(relationship)",opacity:1}},
+   {selector:"node.selected",style:{"border-width":3,"border-color":"#EAF3F2","shadow-blur":24,"shadow-opacity":1,"shadow-color":"#4FA3A0","z-index":999}},
+   {selector:"node.neighbor",style:{"border-width":2,"shadow-blur":15,"shadow-opacity":.8,opacity:1}},
+   {selector:".dimmed",style:{opacity:.08}},
+   {selector:"edge.dimmed",style:{opacity:.035}}
+  ]
+ });
+ function clearFocus(){cyCaseWorkspace.elements().removeClass("selected neighbor active-edge dimmed");}
+ function focusNode(n,zoom=1.35){clearFocus(); n.addClass("selected"); n.neighborhood("node").addClass("neighbor"); n.connectedEdges().addClass("active-edge"); cyCaseWorkspace.animate({center:{eles:n},zoom},{duration:500,easing:"ease-out-cubic"});
+  n.connectedEdges().forEach(e=>{e.animate({style:{width:3.5,opacity:1}},{duration:180}).animate({style:{width:2.2,opacity:1}},{duration:360})});
+}
+ cyCaseWorkspace.on("mouseover","node",evt=>{const n=evt.target; clearFocus(); n.addClass("selected"); n.neighborhood("node").addClass("neighbor"); n.connectedEdges().addClass("active-edge"); cyCaseWorkspace.nodes().not(n).not(n.neighborhood("node")).addClass("dimmed");});
+ cyCaseWorkspace.on("mouseout","node",()=>{if(!cyCaseWorkspace.nodes(".selected").length)return; clearFocus();});
+ cyCaseWorkspace.on("tap","node",evt=>{const n=evt.target;
+  focusNode(n);
+  n.animate({style:{width:54,height:54}}, {duration:180}).animate({style:{width:n.hasClass("key-node")?42:32,height:n.hasClass("key-node")?42:32}}, {duration:320});
+  if(typeof fxToast==="function")fxToast("ENTITY LINKED • "+(n.data("label")||n.id()));
+  if(typeof openWorkspaceEntity==="function")openWorkspaceEntity(n.id());
+});
+ cyCaseWorkspace.on("tap",evt=>{if(evt.target===cyCaseWorkspace){clearFocus();cyCaseWorkspace.fit(cyCaseWorkspace.elements(),80);}});
+ const bar=document.createElement("div"); bar.className="graph-dynamic-controls"; bar.innerHTML='<button class="btn btn-secondary" data-g="fit">⛶ Fit</button><button class="btn btn-secondary" data-g="zi">＋ Zoom</button><button class="btn btn-secondary" data-g="zo">− Zoom</button><button class="btn btn-secondary" data-g="layout">↻ Re-layout</button><button class="btn btn-secondary" data-g="focus">◎ Key entity</button><span>Drag · scroll to zoom · click to inspect</span>';
+ bar.onclick=e=>{const b=e.target.closest("[data-g]");if(!b||!cyCaseWorkspace)return;const g=b.dataset.g,center={x:c.clientWidth/2,y:c.clientHeight/2};if(g==="fit"){clearFocus();cyCaseWorkspace.fit(cyCaseWorkspace.elements(),80)}if(g==="zi")cyCaseWorkspace.zoom({level:Math.min(3.2,cyCaseWorkspace.zoom()*1.18),renderedPosition:center});if(g==="zo")cyCaseWorkspace.zoom({level:Math.max(.25,cyCaseWorkspace.zoom()*.84),renderedPosition:center});if(g==="layout"){clearFocus();cyCaseWorkspace.layout({name:"cose",animate:true,animationDuration:700,padding:110,idealEdgeLength:175,nodeRepulsion:2600,edgeElasticity:.16,gravity:.08,numIter:900,randomize:true}).run()}if(g==="focus"){let best=cyCaseWorkspace.nodes()[0];cyCaseWorkspace.nodes().forEach(n=>{if(!best||n.degree()>best.degree())best=n});if(best)focusNode(best,1.4)}};
+ c.appendChild(bar);
+ setTimeout(()=>{if(cyCaseWorkspace){cyCaseWorkspace.fit(cyCaseWorkspace.elements(),80);
+   const hubs=cyCaseWorkspace.nodes().sort((a,b)=>b.degree()-a.degree()).slice(0,3);
+   hubs.forEach((n,i)=>setInterval(()=>{if(cyCaseWorkspace&&n&&n.isValid()&&!n.hasClass("selected")){n.animate({style:{width:48,height:48}},{duration:450}).animate({style:{width:42,height:42}},{duration:450})}},2200+i*500));
+  }},900);
+}
+async function loadWorkspaceAnalysis(caseId=currentWorkspaceCaseId){
+    const box=document.getElementById("workspaceAnalysisContent");
+    if(!box)return;
+    if(!caseId){box.innerHTML='<div class="case-analysis-empty">Select a case to calculate analysis.</div>';return;}
+    box.innerHTML='<div class="case-analysis-empty">Calculating case analysis…</div>';
+    try{
+        const r=await fetch("/api/cases/"+encodeURIComponent(caseId)+"/analysis");
+        const d=await safeJson(r,"Case analysis API");
+        if(!r.ok)throw new Error(d.detail||"Unable to load case analysis");
+        if(!d.entity_count){
+            box.innerHTML='<div class="case-analysis-empty"><strong>No case entities attached yet.</strong><br>Analyze a synthetic FIR and create/attach its entities to this case. Once entities and relationships are attached, this section will show connectivity, components, density, relationship types, and top connected entities.</div><div class="case-analysis-note">'+escapeWorkspaceHTML(d.note||'Synthetic demonstration only.')+'</div>';
+            return;
+        }
+        const top=(d.top_entities||[]).map(x=>'<div class="case-analysis-row"><div><div class="case-analysis-name">'+escapeWorkspaceHTML(x.name)+'</div><div class="case-analysis-sub">'+escapeWorkspaceHTML(x.type||'UNKNOWN')+' • Betweenness '+escapeWorkspaceHTML(x.betweenness)+'</div></div><strong>'+escapeWorkspaceHTML(x.connections)+' links</strong></div>').join("")||'<div class="case-analysis-sub">No ranked entities.</div>';
+        const types=Object.entries(d.entity_types||{}).map(([k,v])=>'<div class="case-analysis-row"><span>'+escapeWorkspaceHTML(k)+'</span><strong>'+escapeWorkspaceHTML(v)+'</strong></div>').join("")||'<div class="case-analysis-sub">No entity types.</div>';
+        const rels=Object.entries(d.relationship_types||{}).map(([k,v])=>'<div class="case-analysis-row"><span>'+escapeWorkspaceHTML(k)+'</span><strong>'+escapeWorkspaceHTML(v)+'</strong></div>').join("")||'<div class="case-analysis-sub">No relationship types.</div>';
+        box.innerHTML='<div class="case-analysis-grid">'+
+          '<div class="case-analysis-card"><div class="case-analysis-label">Entities</div><div class="case-analysis-value">'+escapeWorkspaceHTML(d.entity_count)+'</div></div>'+
+          '<div class="case-analysis-card"><div class="case-analysis-label">Links</div><div class="case-analysis-value">'+escapeWorkspaceHTML(d.relationship_count)+'</div></div>'+
+          '<div class="case-analysis-card"><div class="case-analysis-label">Network density</div><div class="case-analysis-value">'+escapeWorkspaceHTML(d.density)+'</div></div>'+
+          '<div class="case-analysis-card"><div class="case-analysis-label">Connected groups</div><div class="case-analysis-value">'+escapeWorkspaceHTML(d.connected_components)+'</div></div>'+
+          '</div>'+
+          '<div class="case-analysis-content"><div class="case-analysis-list"><h4 style="margin-bottom:8px">Top connected entities</h4>'+top+'</div>'+
+          '<div><div class="case-analysis-list"><h4 style="margin-bottom:8px">Entity types</h4>'+types+'</div><div class="case-analysis-list" style="margin-top:12px"><h4 style="margin-bottom:8px">Relationship types</h4>'+rels+'</div></div></div>'+
+          '<div class="case-analysis-note">'+escapeWorkspaceHTML(d.note||'Synthetic demonstration only.')+'</div>';
+    }catch(e){console.error(e);box.innerHTML='<div class="case-analysis-empty">Unable to calculate case analysis: '+escapeWorkspaceHTML(e.message||e)+'</div>';}
+}
+async function loadWorkspaceLeads(){try{const r=await fetch("/api/alerts");const d=await safeJson(r, "API response");const a=d.alerts||[];setWorkspaceText("workspaceLeadStat",a.length);const c=document.getElementById("workspaceLeadList");if(!c)return;c.innerHTML=a.slice(0,8).map(x=>`<div class="workspace-list-item workspace-lead"><div class="workspace-lead-title">${escapeWorkspaceHTML(x.title||x.type||x.alert_type||"Analytical lead")}</div><div class="workspace-lead-detail">${escapeWorkspaceHTML(x.description||x.message||x.reason||"Pattern flagged for investigator review.")}</div></div>`).join("")||'<div class="workspace-list-sub">No analytical leads detected.</div>'}catch(e){console.error(e)}}
+async function changeWorkspaceStatus(status){if(!currentWorkspaceCaseId)return;try{const r=await fetch("/api/cases/"+encodeURIComponent(currentWorkspaceCaseId)+"/status",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({status})});const d=await safeJson(r, "API response");if(!r.ok)throw new Error(d.detail||"Unable to update case status");currentWorkspaceCase=d.case;populateWorkspaceCase(d.case);if(typeof renderCases==="function")await renderCases()}catch(e){alert(e.message||"Unable to update case status")}}
+
+
+
+/* =========================================================
+   FIR DASHBOARD + CASE CREATION + MAP INTELLIGENCE
+========================================================= */
+let latestFIRAnalysis=null;
+let investigationMap=null;
+let mapLayer=null;
+
+function handleFIRDrop(event){
+    event.preventDefault();
+    const zone=document.getElementById('firDropZone');
+    if(zone)zone.classList.remove('dragging');
+    const file=event.dataTransfer?.files?.[0];
+    if(!file)return;
+    const input=document.getElementById('firFile');
+    if(input){try{const dt=new DataTransfer();dt.items.add(file);input.files=dt.files;}catch(e){}}
+    window.selectedFIRFile=file;
+    showSelectedFIRFile(file);
+    setFIRStatus(`${file.name} selected — click Analyze FIR`,'fir-success');
+}
+function showSelectedFIRFile(file){
+    const box=document.getElementById('firSelectedFile');
+    if(!box)return;
+    box.classList.remove('hidden');
+    box.innerHTML=`📄 <strong>${firEscape(file.name)}</strong> <span style="color:#7f8ba3">(${(file.size/1024/1024).toFixed(2)} MB)</span>`;
+}
+function loadSampleFIR(){
+    const el=document.getElementById('firText');
+    if(!el)return;
+    el.value=`SYNTHETIC FIRST INFORMATION REPORT
+
+FIR No: FIR-2026-002
+Date of FIR: 2026-08-12
+
+Complainant / Informant Name: Person A
+Persons Mentioned: Person A, Person B, Person C
+Place of Occurrence: Location X
+Vehicle: V1
+Phone: 9000000001
+Account: ACC-001
+
+Narrative:
+The synthetic report describes an alleged incident involving the persons and identifiers listed above. Person A was reportedly associated with Vehicle V1 near Location X. Communication and transaction records may be reviewed for possible relationships.
+
+This document is synthetic demonstration data created for an investigator-assistance prototype.`;
+    window.selectedFIRFile=null;
+    const input=document.getElementById('firFile');if(input)input.value='';
+    const box=document.getElementById('firSelectedFile');if(box)box.classList.add('hidden');
+    setFIRStatus('Sample loaded — click Analyze FIR','fir-success');
+}
+function readFIRFile(event){
+    const file=event.target.files?.[0];
+    if(!file)return;
+    const name=(file.name||'').toLowerCase();
+    if(!/\.(pdf|docx|txt)$/.test(name)){setFIRStatus('Please upload PDF, DOCX, or TXT','fir-warning');event.target.value='';return;}
+    if(file.size>10*1024*1024){setFIRStatus('File is too large (max 10 MB)','fir-warning');event.target.value='';return;}
+    window.selectedFIRFile=file;
+    showSelectedFIRFile(file);
+    if(name.endsWith('.txt')){
+        const reader=new FileReader();
+        reader.onload=()=>{document.getElementById('firText').value=reader.result||'';setFIRStatus('TXT loaded — click Analyze FIR','fir-success')};
+        reader.onerror=()=>setFIRStatus('Could not read file','fir-error');reader.readAsText(file);
+    }else setFIRStatus(`${name.endsWith('.pdf')?'PDF':'DOCX'} selected — click Analyze FIR`,'fir-success');
+}
+function resetFIRCaseAction(){
+    const box=document.getElementById('firCaseAction');
+    if(box)box.classList.add('hidden');
+}
+function renderFIRResults(data){
+    latestFIRAnalysis=data;
+    const box=document.getElementById('firResults');if(!box)return;
+    const extracted=data.extracted||{};
+    const list=(v)=>Array.isArray(v)&&v.length?v.map(x=>firEscape(typeof x==='string'?x:(x.name||x.id||''))).join(', '):'None detected';
+    const matched=data.matched_entities||data.matches||[];
+    const relations=data.relationships||[];
+    const leads=data.analytical_leads||data.leads||[];
+    let html=`<div class="fir-result-header"><div><div class="fir-result-title">${firEscape(data.title||'Synthetic FIR Analysis')}</div><div class="fir-result-sub">${firEscape(data.fir_number||'No FIR number detected')} • ${firEscape(data.date||'No date detected')}</div></div><span class="badge badge-location">${firEscape(data.extraction_method||data.document_type||'DOCUMENT')}</span></div>`;
+    html+=`<div class="fir-entity-grid">`;
+    html+=`<div class="fir-entity"><label>Case ID</label><strong>${firEscape(data.case_id||'Will be generated')}</strong></div>`;
+    html+=`<div class="fir-entity"><label>Complainant / Informant</label><strong>${firEscape(data.complainant||data.informant||'Not detected')}</strong></div>`;
+    html+=`<div class="fir-entity"><label>Persons</label><strong>${list(data.persons||extracted.persons)}</strong></div>`;
+    html+=`<div class="fir-entity"><label>Locations</label><strong>${list(data.locations||extracted.locations)}</strong></div>`;
+    html+=`<div class="fir-entity"><label>Phones</label><strong>${list(data.phones||extracted.phones)}</strong></div>`;
+    html+=`<div class="fir-entity"><label>Vehicles</label><strong>${list(data.vehicles||extracted.vehicles)}</strong></div>`;
+    html+=`<div class="fir-entity"><label>Accounts</label><strong>${list(data.accounts||extracted.accounts)}</strong></div>`;
+    html+=`<div class="fir-entity"><label>Structured facts</label><strong>${firEscape(data.entity_count??0)}</strong></div>`;
+    html+=`</div>`;
+    html+=`<div class="fir-section-title">Synthetic Network Matches</div>`;
+    if(matched.length)html+=matched.map(m=>`<div class="fir-relation"><strong>${firEscape(m.name||m.id)}</strong> — ${firEscape(m.type||'unknown')}<br><span style="color:#7f8ba3">${firEscape(m.id||'')}</span></div>`).join('');
+    else html+=`<div class="fir-relation" style="color:#7f8ba3">No exact synthetic-network matches were found.</div>`;
+    html+=`<div class="fir-section-title">Extracted Relationships</div>`;
+    if(relations.length)html+=relations.map(r=>`<div class="fir-relation"><strong>${firEscape(r.source)}</strong> → <strong>${firEscape(r.target)}</strong><br><span style="color:#7f8ba3">${firEscape(r.relationship||'RELATED')}</span></div>`).join('');
+    else html+=`<div class="fir-relation" style="color:#7f8ba3">No structured relationships were detected.</div>`;
+    html+=`<div class="fir-section-title">Analytical Leads</div>`;
+    if(leads.length)html+=leads.map(l=>`<div class="fir-relation"><strong>${firEscape(l.title||l.type||'Analytical lead')}</strong><br><span style="color:#7f8ba3">${firEscape(l.detail||l.description||'Pattern flagged for investigator review.')}</span></div>`).join('');
+    else html+=`<div class="fir-relation" style="color:#65df9a">No additional leads generated from the extracted facts.</div>`;
+    html+=`<div class="notice" style="margin-top:14px">Analysis complete. Review the extracted facts before creating a case.</div>`;
+    box.innerHTML=html;
+    const action=document.getElementById('firCaseAction');if(action)action.classList.remove('hidden');
+    const copy=document.getElementById('firCaseCreateText');if(copy)copy.textContent=`Ready to create ${data.case_id&&data.case_id!=='FIR-UNASSIGNED'?data.case_id:'a new case'} from this FIR. Choose a priority and create it when ready.`;
+}
+async function analyzeFIR(){
+    const file=window.selectedFIRFile;
+    const text=document.getElementById('firText')?.value?.trim();
+    if(!file&&!text){setFIRStatus('Upload a document or paste a FIR first','fir-warning');return;}
+    setFIRStatus('Analyzing…');resetFIRCaseAction();
+    const button=document.querySelector('#page-dashboard button[onclick="analyzeFIR()"]');if(button)button.disabled=true;
+    try{
+      let r;
+      if(file){const form=new FormData();form.append('file',file);form.append('create_case','false');form.append('priority',document.getElementById('firCasePriority')?.value||'MEDIUM');r=await fetch('/api/analyze-fir-file',{method:'POST',body:form});}
+      else{r=await fetch('/api/analyze-fir',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,create_case:false,priority:document.getElementById('firCasePriority')?.value||'MEDIUM'})});}
+      const data=await safeJson(r, "API response");if(!r.ok)throw new Error(data.detail||'FIR analysis failed');
+      renderFIRResults(data);setFIRStatus(`Analysis complete${data.document_type?' • '+data.document_type:''}`,'fir-success');
+    }catch(error){console.error(error);setFIRStatus(error.message||'Analysis failed','fir-error');document.getElementById('firResults').innerHTML='<div class="fir-empty fir-error">Unable to analyze this document. Check that it is a readable PDF/DOCX/TXT.</div>'}
+    finally{if(button)button.disabled=false;}
+}
+async function createCaseFromFIR(){
+    const data=latestFIRAnalysis;if(!data){alert('Analyze a FIR first.');return;}
+    const priority=document.getElementById('firCasePriority')?.value||'MEDIUM';
+    let caseId=data.case_id&&data.case_id!=='FIR-UNASSIGNED'?data.case_id:'';
+    if(!caseId)caseId='CASE-'+Date.now().toString().slice(-6);
+    const title=data.title||`FIR ${data.fir_number||caseId} Investigation`;
+    const description=`Created from synthetic FIR ${data.fir_number||'N/A'}${data.date?' dated '+data.date:''}. Extracted ${data.entity_count||0} structured facts for investigator review.`;
+    try{
+      const r=await fetch('/api/cases',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({case_id:caseId,title,description,priority})});
+      const out=await safeJson(r, "API response");
+      if(r.status===409){
+        const existing=await fetch('/api/cases/'+encodeURIComponent(caseId));
+        const ex=await existing.json();
+        if(existing.ok){
+          const er=await fetch('/api/cases/'+encodeURIComponent(caseId)+'/entities',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+          const erData=await safeJson(er, "Entity API response");
+          if(!er.ok)throw new Error(erData.detail||'Existing case could not be updated with FIR entities');
+          data.case_created=false;data.case_already_exists=true;data.case_id=caseId;data.case_entity_count=erData.entity_count;latestFIRAnalysis=data;renderFIRResults(data);setFIRStatus(`Case ${caseId} already exists — FIR entities refreshed`,'fir-warning');return;
+        }
+      }
+      if(!r.ok)throw new Error(out.detail||'Unable to create case');
+      data.case_created=true;data.case_id=caseId;latestFIRAnalysis=data;
+      // Persist only the entities and relationships extracted from this FIR into this case.
+      const er=await fetch('/api/cases/'+encodeURIComponent(caseId)+'/entities',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+      const erData=await safeJson(er, "Entity API response");
+      if(!er.ok)throw new Error(erData.detail||'Case was created, but its FIR entities could not be attached');
+      data.case_entity_count=erData.entity_count; data.case_relationship_count=erData.relationship_count; latestFIRAnalysis=data;
+      renderFIRResults(data);setFIRStatus(`Case ${caseId} created with ${erData.entity_count} case entities`,'fir-success');
+      if(typeof renderCases==='function')await renderCases();
+    }catch(e){console.error(e);alert(e.message||'Unable to create case')}
+}
+async function loadMapCaseOptions(){
+    const select=document.getElementById('mapCaseFilter'); if(!select)return;
+    try{
+        const r=await fetch('/api/cases'); const d=await safeJson(r, "API response");
+        const cases=d.cases||[]; const current=select.value;
+        select.innerHTML='<option value="">All map data</option>'+cases.map(c=>`<option value="${escapeHTML(c.case_id)}">${escapeHTML(c.case_id)} — ${escapeHTML(c.title)}</option>`).join('');
+        if(cases.some(c=>c.case_id===current))select.value=current;
+    }catch(e){console.error(e)}
+}
+function initInvestigationMap(){
+    const el=document.getElementById('mapCanvas');if(!el||typeof L==='undefined')return;
+    if(investigationMap)return;
+    investigationMap=L.map(el,{zoomControl:true,worldCopyJump:false}).setView([16.7,81.1],7);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(investigationMap);
+    mapLayer=L.layerGroup().addTo(investigationMap);
+}
+async function loadMapData(){
+    initInvestigationMap();if(!investigationMap)return;
+    try{
+      const select=document.getElementById('mapCaseFilter');
+      const caseId=select?select.value:'';
+      const url=caseId?'/api/map-data?case_id='+encodeURIComponent(caseId):'/api/map-data';
+      const r=await fetch(url);const d=await safeJson(r, "API response");if(!r.ok)throw new Error(d.detail||'Map data unavailable');
+      mapLayer.clearLayers();const bounds=[];const points=[];
+      (d.locations||[]).forEach(loc=>{
+        const point=[Number(loc.lat),Number(loc.lon)];
+        if(!Number.isFinite(point[0])||!Number.isFinite(point[1]))return;
+        points.push({loc,point});bounds.push(point);
+        const marker=L.marker(point).addTo(mapLayer);
+        const rows=(loc.connections||[]).slice(0,10).map(x=>`<div class="map-popup-row"><b>${firEscape(x.type||'entity')}</b>: ${firEscape(x.name||x.id)}${x.relationship?` <span>(${firEscape(x.relationship)})</span>`:''}</div>`).join('');
+        marker.bindPopup(`<div class="map-popup-title">📍 ${firEscape(loc.name)}</div><div class="map-popup-row">City: ${firEscape(loc.city||'')}</div>${rows||'<div class="map-popup-row">No linked entities</div>'}<div class="map-popup-note">Public city-center coordinate; not a precise incident location.</div>`);
+      });
+      // Draw a simple case-location route/relationship line in the order locations are returned.
+      if(caseId && points.length>1){
+        L.polyline(points.map(x=>x.point),{weight:3,opacity:.65,dashArray:'8 8'}).addTo(mapLayer);
+      }
+      if(bounds.length){
+        investigationMap.fitBounds(bounds,{padding:[40,40],maxZoom:10});
+      }else{
+        investigationMap.setView([16.7,81.1],7);
+        const note=caseId?'No recognized public city locations were found for this case. Use city names such as Eluru, Vijayawada, Visakhapatnam or Hyderabad in the synthetic FIR.':'No map locations available.';
+        L.control({position:'topright'}).onAdd=function(){const div=L.DomUtil.create('div');div.style.cssText='background:#111827;color:#dbe5f5;padding:10px 12px;border:1px solid #334155;border-radius:8px;font-size:12px;max-width:260px';div.textContent=note;return div;};
+      }
+      setTimeout(()=>investigationMap.invalidateSize(),80);
+    }catch(e){console.error(e);alert(e.message||'Unable to load map data')}
+}
+loadMapCaseOptions();
+
+const _originalShowPage=showPage;
+showPage=function(page){_originalShowPage(page);if(page==='map'){setTimeout(async()=>{await loadMapCaseOptions();initInvestigationMap();if(investigationMap)investigationMap.invalidateSize();loadMapData()},60)}if(page==='dashboard'){setTimeout(()=>{const el=document.getElementById('firFile');if(el&&window.selectedFIRFile)showSelectedFIRFile(window.selectedFIRFile)},30)}};
+
+/* =========================================================
+   START APPLICATION
+========================================================= */
+
+loadDashboard();
+
+</script>
+
+
+<script>
+
+/* =========================================================
+   PREVIOUS CASE INTELLIGENCE
+========================================================= */
+function intelEscape(v){return String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");}
+
+async function loadPreviousCaseOptions(){
+    const select=document.getElementById("previousCaseCurrent"); if(!select)return;
+    try{
+        const r=await fetch("/api/cases"); const d=await safeJson(r,"Cases API");
+        const cases=d.cases||[]; const current=window.currentWorkspaceCaseId||"";
+        select.innerHTML='<option value="">Select current case…</option>'+cases.map(c=>`<option value="${intelEscape(c.case_id)}">${intelEscape(c.case_id)} — ${intelEscape(c.title)}</option>`).join("");
+        if(cases.some(c=>c.case_id===current))select.value=current;
+        updatePreviousSummary();
+        select.onchange=updatePreviousSummary;
+    }catch(e){console.error(e)}
+}
+async function updatePreviousSummary(){
+    const caseId=document.getElementById("previousCaseCurrent")?.value;
+    const box=document.getElementById("previousCurrentSummary");
+    if(!box)return;
+    if(!caseId){box.innerHTML='<div class="intel-muted">Select a current case to see its extracted entities.</div>';return;}
+    try{
+        const r=await fetch("/api/cases/"+encodeURIComponent(caseId)+"/entities");
+        const d=await safeJson(r,"Entity API"); if(!r.ok)throw new Error(d.detail||"Unable to load case");
+        const es=d.entities||[];
+        const count=t=>es.filter(e=>String(e.type||"").toUpperCase()===t).length;
+        document.getElementById("previousPersonCount").textContent=count("PERSON");
+        document.getElementById("previousLocationCount").textContent=count("LOCATION");
+        box.innerHTML=`<div class="intel-muted"><strong style="color:#e9fbff">${intelEscape(caseId)}</strong> is ready for historical correlation.</div>
+        <div style="margin-top:10px">${es.slice(0,12).map(e=>`<span class="intel-reason">${intelEscape(e.type)} · ${intelEscape(e.name)}</span>`).join("")||"No entities attached yet."}</div>`;
+    }catch(e){box.innerHTML='<div class="intel-muted">'+intelEscape(e.message||e)+'</div>'}
+}
+async function uploadPreviousCase(){
+    const file=document.getElementById("previousCaseFile")?.files?.[0];
+    const caseId=document.getElementById("previousCaseCurrent")?.value||"";
+    const status=document.getElementById("previousCaseStatus");
+    if(!file){status.textContent="Choose a PDF, DOCX, or TXT previous case file.";return;}
+    status.textContent="Extracting facts and running correlation…";
+    const form=new FormData(); form.append("file",file); form.append("current_case_id",caseId);
+    try{
+        const r=await fetch("/api/previous-cases/upload",{method:"POST",body:form});
+        const d=await safeJson(r,"Previous case API");
+        if(!r.ok)throw new Error(d.detail||"Previous case analysis failed");
+        status.textContent=`Stored ${d.reference_id}. ${d.matches?.length||0} related case match(es) found.`;
+        renderPreviousMatches(d.matches||[]);
+        loadPreviousRepository();
+        document.getElementById("previousCaseFile").value="";
+    }catch(e){console.error(e);status.textContent=e.message||"Upload failed."}
+}
+async function matchPreviousCases(){
+    const caseId=document.getElementById("previousCaseCurrent")?.value;
+    const status=document.getElementById("previousCaseStatus");
+    if(!caseId){status.textContent="Select a current case first.";return;}
+    status.textContent="Searching the historical repository…";
+    try{
+        const r=await fetch("/api/previous-cases/match/"+encodeURIComponent(caseId),{method:"POST"});
+        const d=await safeJson(r,"Historical match API");
+        if(!r.ok)throw new Error(d.detail||"Historical search failed");
+        renderPreviousMatches(d.matches||[]);
+        status.textContent=`Correlation complete • ${d.count||0} historical match(es).`;
+    }catch(e){console.error(e);status.textContent=e.message||"Historical search failed."}
+}
+function renderPreviousMatches(matches){
+    const box=document.getElementById("previousMatches"), badge=document.getElementById("previousMatchCount");
+    if(badge)badge.textContent=`${matches.length} match${matches.length===1?"":"es"}`;
+    if(!matches.length){box.innerHTML='<div class="intel-muted">No comparable historical case was found from the uploaded repository.</div>';return;}
+    box.innerHTML=matches.map(m=>{
+        const reasons=(m.reasons||[]).map(x=>`<span class="intel-reason">${intelEscape(x.label)}: ${intelEscape((x.matches||[]).join(", "))}</span>`).join("");
+        return `<div class="intel-result-card"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center">
+          <div><strong>${intelEscape(m.reference_id||"Historical case")}</strong><div class="intel-muted">${intelEscape(m.title||m.filename||"Previous case")}</div></div>
+          <div class="intel-score">${intelEscape(m.score)}%</div></div>
+          <div style="margin-top:10px">${reasons}</div>
+          <div class="intel-muted" style="margin-top:9px">Similarity score reflects extracted overlaps for investigator review; it is not a probability of guilt.</div>
+        </div>`;
+    }).join("");
+}
+async function loadPreviousRepository(){
+    const box=document.getElementById("previousRepository"); if(!box)return;
+    try{
+        const r=await fetch("/api/previous-cases"); const d=await safeJson(r,"Previous repository API");
+        const rows=d.previous_cases||[];
+        const count=document.getElementById("previousFileCount"); if(count)count.textContent=rows.length;
+        if(!rows.length){box.innerHTML='<div class="intel-muted">No previous case files uploaded yet.</div>';return;}
+        box.innerHTML=`<table class="intel-table"><thead><tr><th>Reference</th><th>File</th><th>Case</th><th>Uploaded</th></tr></thead><tbody>`+
+        rows.map(x=>`<tr><td>${intelEscape(x.reference_id)}</td><td>${intelEscape(x.filename)}</td><td>${intelEscape(x.case_id||"—")}</td><td>${intelEscape(x.created_at||"")}</td></tr>`).join("")+
+        `</tbody></table>`;
+    }catch(e){box.innerHTML='<div class="intel-muted">Unable to load repository.</div>'}
+}
+
+/* =========================================================
+   CCTV INTELLIGENCE
+========================================================= */
+async function loadCCTVCaseOptions(){
+    const select=document.getElementById("cctvCaseSelect"); if(!select)return;
+    try{
+        const r=await fetch("/api/cases"); const d=await safeJson(r,"Cases API");
+        const cases=d.cases||[]; const current=window.currentWorkspaceCaseId||"";
+        select.innerHTML='<option value="">No case selected</option>'+cases.map(c=>`<option value="${intelEscape(c.case_id)}">${intelEscape(c.case_id)} — ${intelEscape(c.title)}</option>`).join("");
+        if(cases.some(c=>c.case_id===current))select.value=current;
+    }catch(e){console.error(e)}
+}
+async function analyzeCCTV(){
+    const file=document.getElementById("cctvFile")?.files?.[0];
+    const caseId=document.getElementById("cctvCaseSelect")?.value||"";
+    const status=document.getElementById("cctvStatus");
+    if(!file){status.textContent="Choose an MP4 CCTV video first.";return;}
+    if(!file.name.toLowerCase().endsWith(".mp4")){status.textContent="Only MP4 is supported.";return;}
+    status.textContent="Uploading and analyzing frames…";
+    const form=new FormData();form.append("file",file);form.append("case_id",caseId);
+    try{
+        const r=await fetch("/api/cctv/analyze",{method:"POST",body:form});
+        const d=await safeJson(r,"CCTV API");if(!r.ok)throw new Error(d.detail||"CCTV analysis failed");
+        const video=document.getElementById("cctvVideo");
+        video.src=d.video_url||""; video.load();
+        document.getElementById("cctvState").textContent=d.status||"ANALYZED";
+        const v=d.video||{}, s=d.summary||{};
+        document.getElementById("cctvStats").innerHTML=[
+            ["Duration",`${v.duration_seconds||0}s`],["Frames",v.frames||0],["People frames",s.sampled_people_frames||0],["Motion samples",s.movement_event_samples||0]
+        ].map(x=>`<div class="cctv-stat"><span class="intel-muted">${x[0]}</span><b>${intelEscape(x[1])}</b></div>`).join("");
+        const obs=document.getElementById("cctvObservations");
+        if(d.observations?.length){
+            obs.innerHTML=`<table class="intel-table"><thead><tr><th>Time</th><th>Frame</th><th>People observed</th><th>Movement</th></tr></thead><tbody>`+
+            d.observations.map(o=>`<tr><td>${intelEscape(o.timestamp_seconds)}s</td><td>${intelEscape(o.frame)}</td><td>Person-${String(Math.max(1,o.people_detected)).padStart(2,"0")} observation${o.people_detected===1?"":"s"}</td><td>${intelEscape(o.movement_indicator)}</td></tr>`).join("")+
+            `</tbody></table>`;
+        }else{
+            obs.innerHTML='<div class="intel-muted">No sampled events were detected. This is an observation result, not proof that no event occurred.</div>';
+        }
+        status.textContent=d.analysis_available===false?d.message:"CCTV analysis complete.";
+    }catch(e){console.error(e);status.textContent=e.message||"CCTV analysis failed."}
+}
+
+</script>
+
+<script id="future-interaction-upgrade">
+(()=>{
+  const boot=()=>{
+    const toast=document.createElement('div');toast.id='fxToast';toast.className='fx-toast';document.body.appendChild(toast);
+    window.fxToast=(msg)=>{toast.textContent=msg;toast.classList.add('show');clearTimeout(window.__fxT);window.__fxT=setTimeout(()=>toast.classList.remove('show'),1600)};
+    document.addEventListener('click',e=>{
+      const b=e.target.closest('.btn,button,.nav-item,.tab,.sidebar-item');
+      if(!b)return;
+      const r=b.getBoundingClientRect(), size=Math.max(r.width,r.height)*1.1, ripple=document.createElement('span');
+      ripple.className='fx-ripple';ripple.style.width=ripple.style.height=size+'px';ripple.style.left=(e.clientX-r.left-size/2)+'px';ripple.style.top=(e.clientY-r.top-size/2)+'px';
+      if(getComputedStyle(b).position==='static')b.style.position='relative';b.appendChild(ripple);setTimeout(()=>ripple.remove(),650);
+    });
+    document.querySelectorAll('.metric-card,.card,.panel').forEach(el=>el.addEventListener('mouseenter',()=>el.classList.add('fx-pulse')));
+    document.querySelectorAll('.metric-card,.card,.panel').forEach(el=>el.addEventListener('mouseleave',()=>el.classList.remove('fx-pulse')));
+    const observer=new MutationObserver(()=>{document.querySelectorAll('.btn').forEach(b=>{if(!b.dataset.fx){b.dataset.fx='1'}})});observer.observe(document.body,{childList:true,subtree:true});
+    window.fxToast('NEURAL CONSOLE ONLINE');
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
+</script>
+
+</body>
+
+</html>

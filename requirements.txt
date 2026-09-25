@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+networkx
+pandas
+numpy
+pydantic
+pypdf
+python-multipart
+python-docx
+opencv-python-headless

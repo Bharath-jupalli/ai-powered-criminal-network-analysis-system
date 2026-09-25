@@ -1,0 +1,6 @@
+venv/
+__pycache__/
+*.pyc
+.env
+investigation.db
+investigation_corrupted_backup.db

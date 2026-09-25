@@ -1,0 +1,21 @@
+case_id,title,location,lead_person,date
+CASE-001,Investigation Case 001,L002,P021,2026-03-23
+CASE-002,Investigation Case 002,L005,P001,2026-01-07
+CASE-003,Investigation Case 003,L003,P008,2026-01-17
+CASE-004,Investigation Case 004,L005,P007,2026-01-09
+CASE-005,Investigation Case 005,L005,P007,2026-03-17
+CASE-006,Investigation Case 006,L002,P008,2026-02-12
+CASE-007,Investigation Case 007,L002,P026,2026-03-18
+CASE-008,Investigation Case 008,L001,P009,2026-01-19
+CASE-009,Investigation Case 009,L002,P018,2026-02-02
+CASE-010,Investigation Case 010,L002,P004,2026-03-26
+CASE-011,Investigation Case 011,L001,P005,2026-01-02
+CASE-012,Investigation Case 012,L003,P026,2026-01-31
+CASE-013,Investigation Case 013,L005,P011,2026-01-03
+CASE-014,Investigation Case 014,L002,P009,2026-01-07
+CASE-015,Investigation Case 015,L002,P024,2026-02-23
+CASE-016,Investigation Case 016,L005,P004,2026-01-09
+CASE-017,Investigation Case 017,L004,P015,2026-02-16
+CASE-018,Investigation Case 018,L005,P019,2026-01-14
+CASE-019,Investigation Case 019,L004,P017,2026-01-29
+CASE-020,Investigation Case 020,L005,P002,2026-03-26
